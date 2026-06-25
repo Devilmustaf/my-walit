@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مدير القبوضات والمصاريف العراقي الذكي</title>
+    <style>
+        :root {
+            --bg-color: #f0f4f8;
+            --card-bg: #ffffff;
+            --primary: #1e3a8a; /* أزرق داكن فخم */
+            --primary-light: #2563eb;
+            --income: #10b981; /* أخضر مريح للإيرادات */
+            --expense: #ef4444; /* أحمر للمصاريف */
+            --amber: #f59e0b;
+            --text-main: #1f2937;
+            --text-muted: #6b7280;
+            --border: #e5e7eb;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            padding: 12px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 480px; /* الحجم المثالي للجوال */
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 15px;
+            padding: 10px 0;
+        }
+
+        header h1 {
+            font-size: 1.4rem;
+            color: var(--primary);
+            font-weight: 700;
+        }
+        
+        header p {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        /* كرت الرصيد الإجمالي */
+        .balance-card {
+            background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+            color: white;
+            padding: 22px;
+            border-radius: 16px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(30, 58, 138, 0.15);
+            margin-bottom: 15px;
+        }
+
+        .balance-card h3 {
+            font-weight: 400;
+            font-size: 0.85rem;
+            opacity: 0.9;
+            letter-spacing: 0.5px;
+        }
+
+        .balance-card .balance-amount {
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin: 6px 0;
+        }
+
+        /* كروت الإحصائيات */
+        .stats-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .stat-box {
+            background: var(--card-bg);
+            padding: 14px;
+            border-radius: 14px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+            border: 1px solid var(--border);
+        }
+
+        .stat-box h4 {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+        
+        .stat-box.income h4 { color: var(--income); }
+        .stat-box.expense h4 { color: var(--expense); }
+        
+        .stat-amount { 
+            font-size: 1.1rem; 
+            font-weight: 700; 
+            margin-top: 6px; 
+        }
+
+        /* نموذج إدخال البيانات */
+        .form-card {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+        }
+
+        .form-card h3 { 
+            margin-bottom: 15px; 
+            font-size: 1.05rem; 
+            color: var(--primary);
+            border-bottom: 2px solid var(--bg-color);
+            padding-bottom: 8px;
+        }
+
+        .form-group {
+            margin-bottom: 14px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            outline: none;
+            background-color: #f9fafb;
+            transition: all 0.2s;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary-light);
+            background-color: #fff;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 5px;
+        }
+
+        .radio-label {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 0.95rem;
+            cursor: pointer;
+            padding: 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 10px;
+            background: #fff;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .radio-label input {
+            accent-color: var(--primary-light);
+            width: 16px;
+            height: 16px;
+        }
+
+        .radio-label:has(input:checked) {
+            border-color: var(--primary-light);
+            background-color: rgba(37, 99, 235, 0.05);
+            color: var(--primary-light);
+            font-weight: 600;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 14px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-top: 5px;
+            box-shadow: 0 2px 6px rgba(30, 58, 138, 0.15);
+        }
+
+        .btn-submit:active {
+            transform: scale(0.99);
+        }
+
+        /* قائمة العمليات المسجلة */
+        .history-section h3 {
+            font-size: 1.05rem;
+            margin-bottom: 12px;
+            color: var(--primary);
+        }
+
+        .transaction-list {
+            list-style: none;
+        }
+
+        .transaction-item {
+            background: var(--card-bg);
+            padding: 14px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+            border: 1px solid var(--border);
+        }
+
+        .transaction-item.plus { border-right: 5px solid var(--income); }
+        .transaction-item.minus { border-right: 5px solid var(--expense); }
+
+        .trans-details {
+            flex-grow: 1;
+        }
+        
+        .trans-customer {
+            font-size: 0.75rem;
+            background-color: #eff6ff;
+            color: #1e40af;
+            padding: 2px 6px;
+            border-radius: 4px;
+            display: inline-block;
+            margin-bottom: 4px;
+            font-weight: 600;
+        }
+
+        .trans-text { 
+            font-weight: 600; 
+            font-size: 0.95rem;
+        }
+        
+        .trans-date { 
+            font-size: 0.75rem; 
+            color: var(--text-muted); 
+            margin-top: 4px; 
+        }
+
+        .action-area {
+            text-align: left;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 6px;
+        }
+
+        .trans-amount { 
+            font-weight: bold; 
+            font-size: 1rem;
+        }
+        .plus .trans-amount { color: var(--income); }
+        .minus .trans-amount { color: var(--expense); }
+
+        .btn-actions-container {
+            display: flex;
+            gap: 8px;
+            margin-top: 2px;
+        }
+
+        .action-btn {
+            background: #f3f4f6;
+            border: none;
+            padding: 5px 8px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            font-weight: 500;
+            color: var(--text-main);
+            transition: all 0.2s;
+        }
+        
+        .action-btn:active { transform: scale(0.95); }
+        .btn-pdf { background-color: #fee2e2; color: #b91c1c; } /* أحمر خفيف للوصل */
+        .btn-edit { background-color: #fef3c7; color: #b45309; } /* أصفر خفيف للتعديل */
+        .btn-delete { background-color: #f3f4f6; color: #4b5563; }
+
+        /* منطقة الطباعة المخفية */
+        #receipt-zone {
+            display: none;
+        }
+
+        /* تنسيقات الطباعة الخاصة بالـ PDF والوصل */
+        @media print {
+            body.printing-receipt {
+                background: #ffffff !important;
+                padding: 0;
+                margin: 0;
+            }
+            body.printing-receipt .app-container { 
+                display: none !important; 
+            }
+            body.printing-receipt #receipt-zone { 
+                display: block !important; 
+                width: 100%;
+                padding: 30px;
+                box-sizing: border-box;
+            }
+            .receipt-box {
+                border: 2px dashed #1e3a8a;
+                padding: 25px;
+                border-radius: 12px;
+                direction: rtl;
+                max-width: 500px;
+                margin: 40px auto;
+                background: #fff;
+            }
+            .receipt-header {
+                text-align: center;
+                border-bottom: 2px solid #1e3a8a;
+                padding-bottom: 15px;
+                margin-bottom: 20px;
+            }
+            .receipt-header h2 { 
+                color: #1e3a8a; 
+                font-size: 1.6rem; 
+                margin-bottom: 5px;
+            }
+            .receipt-header p {
+                font-size: 0.85rem;
+                color: #4b5563;
+                margin: 3px 0;
+            }
+            .receipt-body {
+                margin-bottom: 25px;
+            }
+            .receipt-row {
+                margin-bottom: 14px;
+                font-size: 1.1rem;
+                border-bottom: 1px dotted #cbd5e1;
+                padding-bottom: 6px;
+                display: flex;
+            }
+            .receipt-label { 
+                font-weight: bold; 
+                color: #1e3a8a; 
+                min-width: 150px;
+            }
+            .receipt-value {
+                color: #111827;
+                flex-grow: 1;
+            }
+            .receipt-footer {
+                margin-top: 40px;
+                display: flex;
+                justify-content: space-between;
+            }
+            .signature-block {
+                text-align: center;
+                width: 45%;
+            }
+            .signature-block p {
+                font-size: 0.95rem;
+                font-weight: bold;
+                color: #4b5563;
+            }
+            .sig-line {
+                border-bottom: 1px solid #1e3a8a;
+                width: 140px;
+                margin: 35px auto 0 auto;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <header>
+            <h1>المحفظة العراقية الذكية</h1>
+            <p>إدارة الحسابات والقبوضات بالدينار العراقي</p>
+        </header>
+
+        <div class="balance-card">
+            <h3>إجمالي الصافي الحالي</h3>
+            <div class="balance-amount" id="balance">٠ د.ع</div>
+        </div>
+
+        <div class="stats-container">
+            <div class="stat-box income">
+                <h4>إجمالي القبوضات (+)</h4>
+                <div class="stat-amount" id="money-plus">٠ د.ع</div>
+            </div>
+            <div class="stat-box expense">
+                <h4>إجمالي المصاريف (-)</h4>
+                <div class="stat-amount" id="money-minus">٠ د.ع</div>
+            </div>
+        </div>
+
+        <div class="form-card" id="form-card">
+            <h3 id="form-title">تسجيل عملية جديدة</h3>
+            <form id="form">
+                <div class="form-group">
+                    <label>نوع العملية</label>
+                    <div class="radio-group">
+                        <label class="radio-label">
+                            <input type="radio" name="type" value="income" checked id="radio-income"> قبض (إيراد)
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="type" value="expense" id="radio-expense"> صرف (مصروف)
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="customer">اسم الزبون / الجهة</label>
+                    <input type="text" id="customer" class="form-control" placeholder="اكتب اسم الزبون أو الجهة" list="customers-list" required>
+                    <datalist id="customers-list">
+                        </datalist>
+                </div>
+
+                <div class="form-group">
+                    <label for="text">البيان / الوصف</label>
+                    <input type="text" id="text" class="form-control" placeholder="مثال: دفعة من الحساب، شراء بضاعة..." required>
+                </div>
+
+                <div class="form-group">
+                    <label for="amount">المبلغ (بالدينار العراقي)</label>
+                    <input type="number" id="amount" class="form-control" placeholder="مثال: 25000" required>
+                </div>
+
+                <button class="btn-submit" id="submit-btn">حفظ العملية</button>
+            </form>
+        </div>
+
+        <div class="history-section">
+            <h3>سجل العمليات الأخيرة</h3>
+            <ul id="list" class="transaction-list">
+                </ul>
+        </div>
+    </div>
+
+    <div id="receipt-zone"></div>
+
+    <script>
+        const balance = document.getElementById('balance');
+        const money_plus = document.getElementById('money-plus');
+        const money_minus = document.getElementById('money-minus');
+        const list = document.getElementById('list');
+        const form = document.getElementById('form');
+        const text = document.getElementById('text');
+        const amount = document.getElementById('amount');
+        const customerInput = document.getElementById('customer');
+        const customersDatalist = document.getElementById('customers-list');
+        const submitBtn = document.getElementById('submit-btn');
+        const formTitle = document.getElementById('form-title');
+
+        let editId = null;
+
+        // جلب البيانات المخزنة من ذاكرة الهاتف الداخلية
+        const localStorageTransactions = JSON.parse(localStorage.getItem('iraqi_transactions'));
+        let transactions = localStorage.getItem('iraqi_transactions') !== null ? localStorageTransactions : [];
+
+        function formatIraqiNumber(num) {
+            return Math.round(num).toLocaleString('ar-IQ') + ' د.ع';
+        }
+
+        // حفظ ومعالجة مدخلات النموذج (إضافة أو تعديل)
+        function handleFormSubmit(e) {
+            e.preventDefault();
+
+            if (text.value.trim() === '' || amount.value.trim() === '' || customerInput.value.trim() === '') {
+                alert('الرجاء ملء جميع الحقول المطلوبة');
+                return;
+            }
+
+            const type = document.querySelector('input[name="type"]:checked').value;
+            const transactionAmount = type === 'expense' ? -Math.abs(+amount.value) : Math.abs(+amount.value);
+
+            if (editId !== null) {
+                // وضع التعديل
+                transactions = transactions.map(trans => {
+                    if (trans.id === editId) {
+                        return {
+                            ...trans,
+                            customer: customerInput.value.trim(),
+                            text: text.value.trim(),
+                            amount: transactionAmount,
+                            date: new Date().toLocaleDateString('ar-IQ', { hour: '2-digit', minute: '2-digit' }) + ' (معدل)'
+                        };
+                    }
+                    return trans;
+                });
+                
+                editId = null;
+                submitBtn.innerText = 'حفظ العملية';
+                submitBtn.style.backgroundColor = 'var(--primary)';
+                formTitle.innerText = 'تسجيل عملية جديدة';
+            } else {
+                // وضع الإضافة
+                const newTransaction = {
+                    id: Math.floor(Math.random() * 100000000),
+                    customer: customerInput.value.trim(),
+                    text: text.value.trim(),
+                    amount: transactionAmount,
+                    date: new Date().toLocaleDateString('ar-IQ', { hour: '2-digit', minute: '2-digit' })
+                };
+                transactions.push(newTransaction);
+            }
+
+            updateLocalStorage();
+            init();
+
+            text.value = '';
+            amount.value = '';
+            customerInput.value = '';
+        }
+
+        // عرض العملية في القائمة المخصصة للجوال
+        function addTransactionDOM(transaction) {
+            const sign = transaction.amount < 0 ? '-' : '+';
+            const item = document.createElement('li');
+
+            item.classList.add('transaction-item');
+            item.classList.add(transaction.amount < 0 ? 'minus' : 'plus');
+
+            item.innerHTML = `
+                <div class="trans-details">
+                    <span class="trans-customer">👤 ${transaction.customer}</span>
+                    <div class="trans-text">${transaction.text}</div>
+                    <div class="trans-date">📅 ${transaction.date}</div>
+                </div>
+                <div class="action-area">
+                    <span class="trans-amount">${sign}${Math.abs(transaction.amount).toLocaleString('ar-IQ')} د.ع</span>
+                    <div class="btn-actions-container">
+                        <button class="action-btn btn-pdf" onclick="printReceipt(${transaction.id})">📄 وصل PDF</button>
+                        <button class="action-btn btn-edit" onclick="initiateEdit(${transaction.id})">✏️</button>
+                        <button class="action-btn btn-delete" onclick="removeTransaction(${transaction.id})">🗑️</button>
+                    </div>
+                </div>
+            `;
+
+            list.appendChild(item);
+        }
+
+        // تفعيل وضع التعديل
+        function initiateEdit(id) {
+            const transactionToEdit = transactions.find(t => t.id === id);
+            if (!transactionToEdit) return;
+
+            customerInput.value = transactionToEdit.customer;
+            text.value = transactionToEdit.text;
+            amount.value = Math.abs(transactionToEdit.amount);
+            
+            if (transactionToEdit.amount < 0) {
+                document.getElementById('radio-expense').checked = true;
+            } else {
+                document.getElementById('radio-income').checked = true;
+            }
+
+            editId = id;
+            submitBtn.innerText = 'تحديث وتعديل العملية';
+            submitBtn.style.backgroundColor = 'var(--amber)';
+            formTitle.innerText = 'تعديل بيانات العملية المحددة';
+
+            document.getElementById('form-card').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function updateValues() {
+            const amounts = transactions.map(t => t.amount);
+
+            const total = amounts.reduce((acc, item) => (acc += item), 0);
+            const income = amounts.filter(item => item > 0).reduce((acc, item) => (acc += item), 0);
+            const expense = amounts.filter(item => item < 0).reduce((acc, item) => (acc += item), 0) * -1;
+
+            balance.innerText = formatIraqiNumber(total);
+            money_plus.innerText = formatIraqiNumber(income);
+            money_minus.innerText = formatIraqiNumber(expense);
+        }
+
+        // تحديث قائمة اقتراحات الزبائن لمنع التكرار
+        function updateCustomersDatalist() {
+            customersDatalist.innerHTML = '';
+            const uniqueCustomers = [...new Set(transactions.map(t => t.customer))];
+            
+            uniqueCustomers.forEach(cust => {
+                const option = document.createElement('option');
+                option.value = cust;
+                customersDatalist.appendChild(option);
+            });
+        }
+
+        function removeTransaction(id) {
+            if(confirm('هل أنت متأكد من حذف هذه العملية؟')) {
+                transactions = transactions.filter(t => t.id !== id);
+                if (editId === id) {
+                    editId = null;
+                    submitBtn.innerText = 'حفظ العملية';
+                    submitBtn.style.backgroundColor = 'var(--primary)';
+                    formTitle.innerText = 'تسجيل عملية جديدة';
+                    text.value = ''; amount.value = ''; customerInput.value = '';
+                }
+                updateLocalStorage();
+                init();
+            }
+        }
+
+        // توليد وبناء الوصل والطباعة الفورية بصيغة PDF
+        function printReceipt(id) {
+            const trans = transactions.find(t => t.id === id);
+            if (!trans) return;
+
+            const isIncome = trans.amount >= 0;
+            const title = isIncome ? 'وصل قبض مالي' : 'وصل صرف مالي';
+            const partyLabel = isIncome ? 'استلمت من السيد / السادة:' : 'دفعت إلى السيد / السادة:';
+            const absAmountStr = Math.abs(trans.amount).toLocaleString('ar-IQ') + ' دينار عراقي لا غير';
+
+            const receiptZone = document.getElementById('receipt-zone');
+            receiptZone.innerHTML = `
+                <div class="receipt-box">
+                    <div class="receipt-header">
+                        <h2>المحفظة الذكية - وصل مالي</h2>
+                        <p>رقم السند المرجعي: ${trans.id}</p>
+                        <p>تاريخ وتوقيت الإصدار: ${trans.date}</p>
+                    </div>
+                    <div class="receipt-body">
+                        <div class="receipt-row">
+                            <span class="receipt-label">نوع السند:</span>
+                            <span class="receipt-value" style="font-weight:bold; color:${isIncome?'#10b981':'#ef4444'}">${title}</span>
+                        </div>
+                        <div class="receipt-row">
+                            <span class="receipt-label">${partyLabel}</span>
+                            <span class="receipt-value" style="font-weight:bold;">${trans.customer}</span>
+                        </div>
+                        <div class="receipt-row">
+                            <span class="receipt-label">مبلغ وقدره:</span>
+                            <span class="receipt-value" style="font-weight: bold; background-color:#f3f4f6; padding: 4px 8px; border-radius:4px;">${absAmountStr}</span>
+                        </div>
+                        <div class="receipt-row">
+                            <span class="receipt-label">وذلك لغرض / عن:</span>
+                            <span class="receipt-value">${trans.text}</span>
+                        </div>
+                    </div>
+                    <div class="receipt-footer">
+                        <div class="signature-block">
+                            <p>توقيع وتنفيذ المحاسب</p>
+                            <div class="sig-line"></div>
+                        </div>
+                        <div class="signature-block">
+                            <p>توقيع العميل / الزبون</p>
+                            <div class="sig-line"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.body.classList.add('printing-receipt');
+            window.print();
+            document.body.classList.remove('printing-receipt');
+        }
+
+        function updateLocalStorage() {
+            localStorage.setItem('iraqi_transactions', JSON.stringify(transactions));
+        }
+
+        function init() {
+            list.innerHTML = '';
+            transactions.forEach(addTransactionDOM);
+            updateValues();
+            updateCustomersDatalist();
+        }
+
+        init();
+        form.addEventListener('submit', handleFormSubmit);
+    </script>
+</body>
+</html>
