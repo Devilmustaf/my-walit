@@ -261,7 +261,7 @@
         .btn-pdf { color: var(--primary); font-weight: 600; }
         .btn-delete { color: var(--danger); }
 
-        /* ==================== محرك الطباعة وعزل الهواتف ==================== */
+        /* حاوية الطباعة المعزولة للهواتف والحواسب */
         #print-section {
             display: none;
         }
@@ -273,10 +273,10 @@
                 margin: 0 !important;
             }
             .app-container {
-                display: none !important; /* إخفاء التطبيق بالكامل بالهاتف */
+                display: none !important;
             }
             #print-section {
-                display: block !important; /* تفعيل الحاوية المعزولة فقط */
+                display: block !important;
                 width: 100% !important;
                 direction: rtl !important;
             }
@@ -288,12 +288,12 @@
     <div class="app-container">
         <header>
             <h1>المحفظة العراقية الذكية</h1>
-            <p>إدارة الحسابات والقبوضات بالدينار العراقي</p>
+            <p>إدارة الحسابات والقبوضات بالدينار العراقي (نسخة سحابية)</p>
         </header>
 
         <div class="balance-card">
             <span>إجمالي المتبقي الحالي</span>
-            <h2 id="total-balance">0 د.ع</h2>
+            <h2 id="total-balance">جاري التحميل...</h2>
         </div>
 
         <div class="stats-grid">
@@ -333,21 +333,42 @@
                     <input type="number" id="tx-amount" placeholder="مثال: 25000" required>
                 </div>
 
-                <button type="submit" class="btn-submit">حفظ العملية</button>
+                <button type="submit" class="btn-submit">حفظ في السحاب</button>
             </form>
         </div>
 
         <div class="history-section">
-            <h3>سجل العمليات الأخيرة</h3>
+            <h3>سجل العمليات الأخيرة الحية</h3>
             <div class="transaction-list" id="tx-list">
-                </div>
+                <!-- العمليات السحابية ستظهر هنا تلقائياً -->
+            </div>
         </div>
     </div>
 
+    <!-- حاوية الطباعة المعزولة -->
     <div id="print-section"></div>
 
+    <!-- استدعاء مكتبات الـ Firebase المتوافقة (Compat SDK) لتشغيلها مباشرة على المتصفح -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
     <script>
-        let transactions = JSON.parse(localStorage.getItem('iraqi_wallet_txs')) || [];
+        // إعدادات Firebase السحابية الخاصة بك
+        const firebaseConfig = {
+            apiKey: "AIzaSyAkBFEtRQBub11C7rgbKXqoYses2j7e2Bo",
+            authDomain: "iraqi-wallet-9b533.firebaseapp.com",
+            projectId: "iraqi-wallet-9b533",
+            storageBucket: "iraqi-wallet-9b533.firebasestorage.app",
+            messagingSenderId: "941146659223",
+            appId: "1:941146659223:web:9736bb1d2768dddc144cd2",
+            measurementId: "G-PY46CC9K17"
+        };
+
+        // تهيئة الـ Firebase وقاعدة البياناتfirestore
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        let transactions = [];
 
         const form = document.getElementById('tx-form');
         const totalBalance = document.getElementById('total-balance');
@@ -364,6 +385,14 @@
             let expenseSum = 0;
 
             txList.innerHTML = '';
+
+            if (transactions.length === 0) {
+                txList.innerHTML = '<p style="text-align:center; font-size:13px; color:#64748b; padding:15px;">لا توجد عمليات مسجلة بالسحاب حالياً.</p>';
+                totalBalance.textContent = formatMoney(0);
+                totalIncome.textContent = formatMoney(0);
+                totalExpense.textContent = formatMoney(0);
+                return;
+            }
 
             transactions.forEach((tx) => {
                 if(tx.type === 'income') incomeSum += Number(tx.amount);
@@ -396,6 +425,21 @@
             totalExpense.textContent = formatMoney(expenseSum);
         }
 
+        // الاستماع المباشر والحي للتغييرات في السحاب (Real-time Sync)
+        db.collection('transactions').orderBy('createdAt', 'desc').onSnapshot((snapshot) => {
+            transactions = [];
+            snapshot.forEach((doc) => {
+                transactions.push({
+                    id: doc.id,
+                    ...doc.data()
+                });
+            });
+            updateUI();
+        }, (error) => {
+            console.error("حدث خطأ أثناء جلب البيانات: ", error);
+        });
+
+        // تسجيل وحفظ العملية بالسحاب
         form.addEventListener('submit', (e) => {
             e.preventDefault();
             
@@ -408,41 +452,45 @@
             const dateStr = now.toLocaleDateString('ar-EG') + ' ' + now.toLocaleTimeString('ar-EG', {hour: '2-digit', minute:'2-digit'});
 
             const newTx = {
-                id: Date.now().toString(),
                 type,
                 name,
                 desc,
-                amount,
-                date: dateStr
+                amount: Number(amount),
+                date: dateStr,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
             };
 
-            transactions.unshift(newTx);
-            localStorage.setItem('iraqi_wallet_txs', JSON.stringify(transactions));
-            form.reset();
-            updateUI();
+            db.collection('transactions').add(newTx)
+                .then(() => {
+                    form.reset();
+                })
+                .catch((error) => {
+                    alert('خطأ في الاتصال بالسحاب: ' + error.message);
+                });
         });
 
+        // حذف العملية من السحاب نهائياً
         function deleteTx(id) {
-            if(confirm('هل أنت متأكد من حذف هذه العملية؟')) {
-                transactions = transactions.filter(t => t.id !== id);
-                localStorage.setItem('iraqi_wallet_txs', JSON.stringify(transactions));
-                updateUI();
+            if(confirm('هل أنت متأكد من حذف هذه العملية من السحاب نهائياً؟')) {
+                db.collection('transactions').doc(id).delete()
+                    .catch((error) => {
+                        alert('حدث خطأ أثناء محاولة الحذف: ' + error.message);
+                    });
             }
         }
 
-        // دالة توليد وطباعة الوصل السحابي المعزول للهواتف
+        // نظام توليد وصل الطباعة المخصص والمعزول
         function generatePDF(id) {
             const tx = transactions.find(t => t.id === id);
             if(!tx) return;
 
             const printSection = document.getElementById('print-section');
             
-            // قالب الفاتورة الحرارية النظيفة بدون عناصر الموقع الخارجية
             printSection.innerHTML = `
                 <div style="direction: rtl; font-family: 'Cairo', sans-serif; padding: 20px; max-width: 400px; margin: 0 auto; color: #000; background: #fff; border: 1px dashed #000; border-radius: 8px;">
                     <div style="text-align: center; margin-bottom: 20px;">
                         <h2 style="font-size: 20px; margin: 0; font-weight: 700;">المحفظة العراقية الذكية</h2>
-                        <p style="font-size: 11px; color: #555; margin: 5px 0 0 0;">وصل معاملات مالي معتمد</p>
+                        <p style="font-size: 11px; color: #555; margin: 5px 0 0 0;">وصل معاملات مالي معتمد - نسّخة سحابية</p>
                     </div>
                     
                     <div style="border-bottom: 1px dashed #000; margin-bottom: 15px;"></div>
@@ -474,17 +522,13 @@
                     </div>
                     
                     <div style="text-align: center; margin-top: 25px; font-size: 10px; color: #64748b;">
-                        شكراً لتعاملكم معنا <br> تم إنشاؤه عبر نظام المحفظة الإلكترونية الذكية
+                        شكراً لتعاملكم معنا <br> تم حفظه ومزامنته عبر السحاب الآمن لجوجل
                     </div>
                 </div>
             `;
 
-            // إطلاق أمر الطباعة الفوري للمتصفح
             window.print();
         }
-
-        // تشغيل الواجهة عند فتح التطبيق أول مرة
-        updateUI();
     </script>
 </body>
 </html>
