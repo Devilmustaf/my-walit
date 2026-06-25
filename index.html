@@ -375,15 +375,6 @@
 
         .btn-pdf { color: var(--primary); font-weight: 600; }
         .btn-delete { color: var(--danger); }
-
-        /* حاوية الطباعة المعزولة تماماً */
-        #print-section { display: none; }
-
-        @media print {
-            body { background: #fff !important; padding: 0 !important; margin: 0 !important; }
-            .app-container, .auth-container, .install-prompt { display: none !important; }
-            #print-section { display: block !important; width: 100% !important; direction: rtl !important; }
-        }
     </style>
 </head>
 <body>
@@ -480,9 +471,6 @@
         </div>
     </div>
 
-    <!-- حاوية الطباعة والـ PDF -->
-    <div id="print-section"></div>
-
     <!-- مكتبات Firebase الأصلية والمتوافقة -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
@@ -543,7 +531,6 @@
             document.getElementById('install-box').style.display = 'none';
         }
 
-        // تشغيل نظام فحص التثبيت فوراً عند تحميل الصفحة الأساسي
         window.addEventListener('DOMContentLoaded', checkAppInstallation);
 
         // التبديل بين واجهة الدخول وإنشاء حساب جديد
@@ -685,7 +672,7 @@
                         transactions.push({ id: doc.id, ...doc.data() });
                     });
                     
-                    // فرز آمن محلي وسريع بنسبة 100% من الأحدث للأقدم
+                    // فرز آمن محلي وسريع من الأحدث للأقدم
                     transactions.sort((a, b) => {
                         const timeA = a.createdAt && typeof a.createdAt.toMillis === 'function' ? a.createdAt.toMillis() : 0;
                         const timeB = b.createdAt && typeof b.createdAt.toMillis === 'function' ? b.createdAt.toMillis() : 0;
@@ -741,40 +728,72 @@
             }
         }
 
-        // محرك الطباعة وعزل وصولات الـ PDF بشكل متوافق تماماً مع الجوالات والحاسبة
+        // ==================== تعديل محرك الطباعة هنا لحل مشكلة الايفون ====================
         function generatePDF(id) {
             const tx = transactions.find(t => t.id === id);
             if(!tx) return;
 
-            const printSection = document.getElementById('print-section');
-            printSection.innerHTML = `
-                <div style="direction: rtl; font-family: 'Cairo', sans-serif; padding: 20px; max-width: 400px; margin: 0 auto; color: #000; background: #fff; border: 1px dashed #000; border-radius: 8px;">
-                    <div style="text-align: center; margin-bottom: 20px;">
-                        <h2 style="font-size: 20px; margin: 0; font-weight: 700;">المحفظة العراقية الذكية</h2>
-                        <p style="font-size: 11px; color: #555; margin: 5px 0 0 0;">وصل معاملات مالي - نسخة الحساب الآمن</p>
+            // إزالة أي إطار قديم لضمان عدم تراكم العناصر في الذاكرة
+            const oldFrame = document.getElementById('print-iframe');
+            if(oldFrame) oldFrame.remove();
+
+            // إنشاء إطار (Iframe) معزول ومخفي تماماً لحل مشكلة الطباعة والـ PDF في متصفحات الآيفون
+            const iframe = document.createElement('iframe');
+            iframe.id = 'print-iframe';
+            iframe.style.position = 'fixed';
+            iframe.style.bottom = '0';
+            iframe.style.right = '0';
+            iframe.style.width = '0';
+            iframe.style.height = '0';
+            iframe.style.border = 'none';
+            document.body.appendChild(iframe);
+
+            const doc = iframe.contentWindow.document;
+            doc.open();
+            doc.write(`
+                <!DOCTYPE html>
+                <html lang="ar" dir="rtl">
+                <head>
+                    <meta charset="UTF-8">
+                    <title>وصل مالي</title>
+                    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+                    <style>
+                        body { font-family: 'Cairo', sans-serif; padding: 20px; background: #fff; color: #000; direction: rtl; }
+                        .receipt-box { max-width: 400px; margin: 0 auto; padding: 20px; border: 1px dashed #000; border-radius: 8px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="receipt-box">
+                        <div style="text-align: center; margin-bottom: 20px;">
+                            <h2 style="font-size: 20px; margin: 0; font-weight: 700;">المحفظة العراقية الذكية</h2>
+                            <p style="font-size: 11px; color: #555; margin: 5px 0 0 0;">وصل معاملات مالي - نسخة الحساب الآمن</p>
+                        </div>
+                        <div style="border-bottom: 1px dashed #000; margin-bottom: 15px;"></div>
+                        <table style="width: 100%; font-size: 14px; border-collapse: collapse; line-height: 2;">
+                            <tr><td style="font-weight: bold; width: 35%; padding: 4px 0;">نوع العملية:</td><td>${tx.type === 'income' ? 'قبض وإيراد' : 'صرف ومصروف'}</td></tr>
+                            <tr><td style="font-weight: bold; padding: 4px 0;">الزبون/الجهة:</td><td>${tx.name}</td></tr>
+                            <tr><td style="font-weight: bold; padding: 4px 0;">البيان والوصف:</td><td>${tx.desc}</td></tr>
+                            <tr><td style="font-weight: bold; padding: 4px 0;">التاريخ:</td><td style="font-size: 12px;">${tx.date}</td></tr>
+                        </table>
+                        <div style="border-bottom: 1px dashed #000; margin: 15px 0;"></div>
+                        <div style="background: #f8fafc; padding: 12px; border-radius: 6px; text-align: center; border: 1px solid #e2e8f0;">
+                            <span style="font-size: 13px; color: #475569; display: block; margin-bottom: 4px;">المبلغ الإجمالي</span>
+                            <strong style="font-size: 22px; color: #000;">${Number(tx.amount).toLocaleString('ar-EG')} د.ع</strong>
+                        </div>
+                        <div style="text-align: center; margin-top: 25px; font-size: 10px; color: #64748b;">
+                            شكراً لتعاملكم معنا <br> تم حفظه سحابياً بأمان لحسابك
+                        </div>
                     </div>
-                    <div style="border-bottom: 1px dashed #000; margin-bottom: 15px;"></div>
-                    <table style="width: 100%; font-size: 14px; border-collapse: collapse; line-height: 2;">
-                        <tr><td style="font-weight: bold; width: 35%; padding: 4px 0;">نوع العملية:</td><td>${tx.type === 'income' ? 'قبض وإيراد' : 'صرف ومصروف'}</td></tr>
-                        <tr><td style="font-weight: bold; padding: 4px 0;">الزبون/الجهة:</td><td>${tx.name}</td></tr>
-                        <tr><td style="font-weight: bold; padding: 4px 0;">البيان والوصف:</td><td>${tx.desc}</td></tr>
-                        <tr><td style="font-weight: bold; padding: 4px 0;">التاريخ:</td><td style="font-size: 12px;">${tx.date}</td></tr>
-                    </table>
-                    <div style="border-bottom: 1px dashed #000; margin: 15px 0;"></div>
-                    <div style="background: #f8fafc; padding: 12px; border-radius: 6px; text-align: center; border: 1px solid #e2e8f0;">
-                        <span style="font-size: 13px; color: #475569; display: block; margin-bottom: 4px;">المبلغ الإجمالي</span>
-                        <strong style="font-size: 22px; color: #000;">${Number(tx.amount).toLocaleString('ar-EG')} د.ع</strong>
-                    </div>
-                    <div style="text-align: center; margin-top: 25px; font-size: 10px; color: #64748b;">
-                        شكراً لتعاملكم معنا <br> تم حفظه سحابياً بأمان لحسابك
-                    </div>
-                </div>
-            `;
-            
-            // مهلة زمنية صغيرة لضمان معالجة عناصر الـ CSS بشكل صحيح داخل الموبايل قبل الطباعة
+                </body>
+                </html>
+            `);
+            doc.close();
+
+            // استدعاء نافذة الطباعة التفاعلية الأصلية للايفون لإنشاء PDF فوري
             setTimeout(() => {
-                window.print();
-            }, 400);
+                iframe.contentWindow.focus();
+                iframe.contentWindow.print();
+            }, 500);
         }
     </script>
 </body>
