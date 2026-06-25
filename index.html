@@ -3,165 +3,128 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مدير القبوضات والمصاريف العراقي الذكي</title>
+    <title>المحفظة العراقية الذكية</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #f0f4f8;
-            --card-bg: #ffffff;
-            --primary: #1e3a8a; /* أزرق داكن فخم */
-            --primary-light: #2563eb;
-            --income: #10b981; /* أخضر مريح للإيرادات */
-            --expense: #ef4444; /* أحمر للمصاريف */
-            --amber: #f59e0b;
-            --text-main: #1f2937;
-            --text-muted: #6b7280;
-            --border: #e5e7eb;
+            --primary: #2563eb;
+            --success: #16a34a;
+            --danger: #dc2626;
+            --background: #f8fafc;
+            --surface: #ffffff;
+            --text: #0f172a;
+            --text-muted: #64748b;
         }
 
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Cairo', sans-serif;
         }
 
         body {
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            padding: 12px;
+            background-color: var(--background);
+            color: var(--text);
+            padding: 20px 10px;
             display: flex;
             justify-content: center;
         }
 
         .app-container {
             width: 100%;
-            max-width: 480px; /* الحجم المثالي للجوال */
+            max-width: 500px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
         }
 
         header {
             text-align: center;
-            margin-bottom: 15px;
-            padding: 10px 0;
+            margin-bottom: 5px;
         }
 
         header h1 {
-            font-size: 1.4rem;
-            color: var(--primary);
+            font-size: 24px;
+            color: #1e3a8a;
             font-weight: 700;
         }
-        
+
         header p {
-            font-size: 0.8rem;
+            font-size: 13px;
             color: var(--text-muted);
-            margin-top: 2px;
         }
 
-        /* كرت الرصيد الإجمالي */
         .balance-card {
-            background: linear-gradient(135deg, #1e3a8a, #3b82f6);
-            color: white;
-            padding: 22px;
+            background: var(--surface);
             border-radius: 16px;
+            padding: 20px;
             text-align: center;
-            box-shadow: 0 4px 20px rgba(30, 58, 138, 0.15);
-            margin-bottom: 15px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+            border: 1px solid #e2e8f0;
         }
 
-        .balance-card h3 {
-            font-weight: 400;
-            font-size: 0.85rem;
-            opacity: 0.9;
-            letter-spacing: 0.5px;
+        .balance-card span {
+            font-size: 14px;
+            color: var(--text-muted);
         }
 
-        .balance-card .balance-amount {
-            font-size: 1.8rem;
-            font-weight: 800;
-            margin: 6px 0;
+        .balance-card h2 {
+            font-size: 28px;
+            margin-top: 5px;
+            color: #0f172a;
         }
 
-        /* كروت الإحصائيات */
-        .stats-container {
+        .stats-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 12px;
-            margin-bottom: 20px;
         }
 
         .stat-box {
-            background: var(--card-bg);
-            padding: 14px;
-            border-radius: 14px;
+            background: var(--surface);
+            padding: 15px;
+            border-radius: 12px;
             text-align: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.03);
-            border: 1px solid var(--border);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            border: 1px solid #e2e8f0;
         }
 
-        .stat-box h4 {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-        }
-        
-        .stat-box.income h4 { color: var(--income); }
-        .stat-box.expense h4 { color: var(--expense); }
-        
-        .stat-amount { 
-            font-size: 1.1rem; 
-            font-weight: 700; 
-            margin-top: 6px; 
-        }
-
-        /* نموذج إدخال البيانات */
-        .form-card {
-            background: var(--card-bg);
-            padding: 20px;
-            border-radius: 16px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
-            margin-bottom: 20px;
-            border: 1px solid var(--border);
-        }
-
-        .form-card h3 { 
-            margin-bottom: 15px; 
-            font-size: 1.05rem; 
-            color: var(--primary);
-            border-bottom: 2px solid var(--bg-color);
-            padding-bottom: 8px;
-        }
-
-        .form-group {
-            margin-bottom: 14px;
-        }
-
-        .form-group label {
+        .stat-box span {
+            font-size: 12px;
             display: block;
-            margin-bottom: 6px;
-            font-size: 0.85rem;
+            margin-bottom: 5px;
+        }
+
+        .stat-box.income span { color: var(--success); }
+        .stat-box.expense span { color: var(--danger); }
+
+        .stat-box p {
+            font-size: 16px;
             font-weight: 600;
-            color: var(--text-main);
         }
 
-        .form-control {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #d1d5db;
-            border-radius: 10px;
-            font-size: 0.95rem;
-            outline: none;
-            background-color: #f9fafb;
-            transition: all 0.2s;
+        .form-section {
+            background: var(--surface);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+            border: 1px solid #e2e8f0;
         }
 
-        .form-control:focus {
-            border-color: var(--primary-light);
-            background-color: #fff;
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        .form-section h3 {
+            font-size: 16px;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #f1f5f9;
+            padding-bottom: 8px;
         }
 
         .radio-group {
             display: flex;
             gap: 15px;
-            margin-top: 5px;
+            margin-bottom: 15px;
         }
 
         .radio-label {
@@ -170,224 +133,152 @@
             align-items: center;
             justify-content: center;
             gap: 8px;
-            font-size: 0.95rem;
-            cursor: pointer;
             padding: 10px;
-            border: 1px solid #d1d5db;
-            border-radius: 10px;
-            background: #fff;
-            font-weight: 500;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
             transition: all 0.2s;
         }
 
-        .radio-label input {
-            accent-color: var(--primary-light);
-            width: 16px;
-            height: 16px;
+        .radio-group input[type="radio"] {
+            display: none;
         }
 
-        .radio-label:has(input:checked) {
-            border-color: var(--primary-light);
-            background-color: rgba(37, 99, 235, 0.05);
-            color: var(--primary-light);
+        .radio-group input[type="radio"]:checked + .radio-label.inc {
+            background: #f0fdf4;
+            border-color: var(--success);
+            color: var(--success);
             font-weight: 600;
+        }
+
+        .radio-group input[type="radio"]:checked + .radio-label.exp {
+            background: #fef2f2;
+            border-color: var(--danger);
+            color: var(--danger);
+            font-weight: 600;
+        }
+
+        .input-block {
+            margin-bottom: 15px;
+        }
+
+        .input-block label {
+            display: block;
+            font-size: 13px;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .input-block input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .input-block input:focus {
+            border-color: var(--primary);
         }
 
         .btn-submit {
             width: 100%;
-            padding: 14px;
-            background-color: var(--primary);
+            padding: 12px;
+            background: #1e293b;
             color: white;
             border: none;
-            border-radius: 10px;
-            font-size: 1rem;
-            font-weight: bold;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
             cursor: pointer;
-            transition: background 0.2s;
-            margin-top: 5px;
-            box-shadow: 0 2px 6px rgba(30, 58, 138, 0.15);
         }
 
-        .btn-submit:active {
-            transform: scale(0.99);
-        }
-
-        /* قائمة العمليات المسجلة */
         .history-section h3 {
-            font-size: 1.05rem;
+            font-size: 16px;
             margin-bottom: 12px;
-            color: var(--primary);
+            color: var(--text-muted);
         }
 
         .transaction-list {
-            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
         }
 
         .transaction-item {
-            background: var(--card-bg);
-            padding: 14px;
+            background: var(--surface);
+            padding: 15px;
             border-radius: 12px;
-            margin-bottom: 10px;
+            border-right: 5px solid #cbd5e1;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .transaction-item.income { border-right-color: var(--success); }
+        .transaction-item.expense { border-right-color: var(--danger); }
+
+        .item-main {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .item-details h4 { font-size: 15px; font-weight: 600; }
+        .item-details p { font-size: 12px; color: var(--text-muted); }
+        .item-amount { font-weight: 700; font-size: 16px; }
+        
+        .income .item-amount { color: var(--success); }
+        .expense .item-amount { color: var(--danger); }
+
+        .item-meta {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.02);
-            border: 1px solid var(--border);
+            font-size: 11px;
+            color: var(--text-muted);
+            border-top: 1px solid #f1f5f9;
+            padding-top: 8px;
         }
 
-        .transaction-item.plus { border-right: 5px solid var(--income); }
-        .transaction-item.minus { border-right: 5px solid var(--expense); }
-
-        .trans-details {
-            flex-grow: 1;
-        }
-        
-        .trans-customer {
-            font-size: 0.75rem;
-            background-color: #eff6ff;
-            color: #1e40af;
-            padding: 2px 6px;
-            border-radius: 4px;
-            display: inline-block;
-            margin-bottom: 4px;
-            font-weight: 600;
-        }
-
-        .trans-text { 
-            font-weight: 600; 
-            font-size: 0.95rem;
-        }
-        
-        .trans-date { 
-            font-size: 0.75rem; 
-            color: var(--text-muted); 
-            margin-top: 4px; 
-        }
-
-        .action-area {
-            text-align: left;
+        .actions {
             display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            gap: 6px;
+            gap: 10px;
         }
 
-        .trans-amount { 
-            font-weight: bold; 
-            font-size: 1rem;
-        }
-        .plus .trans-amount { color: var(--income); }
-        .minus .trans-amount { color: var(--expense); }
-
-        .btn-actions-container {
-            display: flex;
-            gap: 8px;
-            margin-top: 2px;
-        }
-
-        .action-btn {
-            background: #f3f4f6;
+        .btn-action {
+            background: none;
             border: none;
-            padding: 5px 8px;
-            border-radius: 6px;
-            font-size: 0.75rem;
             cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 3px;
-            font-weight: 500;
-            color: var(--text-main);
-            transition: all 0.2s;
+            font-size: 12px;
+            padding: 2px 5px;
+            border-radius: 4px;
         }
-        
-        .action-btn:active { transform: scale(0.95); }
-        .btn-pdf { background-color: #fee2e2; color: #b91c1c; } /* أحمر خفيف للوصل */
-        .btn-edit { background-color: #fef3c7; color: #b45309; } /* أصفر خفيف للتعديل */
-        .btn-delete { background-color: #f3f4f6; color: #4b5563; }
 
-        /* منطقة الطباعة المخفية */
-        #receipt-zone {
+        .btn-pdf { color: var(--primary); font-weight: 600; }
+        .btn-delete { color: var(--danger); }
+
+        /* ==================== محرك الطباعة وعزل الهواتف ==================== */
+        #print-section {
             display: none;
         }
 
-        /* تنسيقات الطباعة الخاصة بالـ PDF والوصل */
         @media print {
-            body.printing-receipt {
+            body {
                 background: #ffffff !important;
-                padding: 0;
-                margin: 0;
+                padding: 0 !important;
+                margin: 0 !important;
             }
-            body.printing-receipt .app-container { 
-                display: none !important; 
+            .app-container {
+                display: none !important; /* إخفاء التطبيق بالكامل بالهاتف */
             }
-            body.printing-receipt #receipt-zone { 
-                display: block !important; 
-                width: 100%;
-                padding: 30px;
-                box-sizing: border-box;
-            }
-            .receipt-box {
-                border: 2px dashed #1e3a8a;
-                padding: 25px;
-                border-radius: 12px;
-                direction: rtl;
-                max-width: 500px;
-                margin: 40px auto;
-                background: #fff;
-            }
-            .receipt-header {
-                text-align: center;
-                border-bottom: 2px solid #1e3a8a;
-                padding-bottom: 15px;
-                margin-bottom: 20px;
-            }
-            .receipt-header h2 { 
-                color: #1e3a8a; 
-                font-size: 1.6rem; 
-                margin-bottom: 5px;
-            }
-            .receipt-header p {
-                font-size: 0.85rem;
-                color: #4b5563;
-                margin: 3px 0;
-            }
-            .receipt-body {
-                margin-bottom: 25px;
-            }
-            .receipt-row {
-                margin-bottom: 14px;
-                font-size: 1.1rem;
-                border-bottom: 1px dotted #cbd5e1;
-                padding-bottom: 6px;
-                display: flex;
-            }
-            .receipt-label { 
-                font-weight: bold; 
-                color: #1e3a8a; 
-                min-width: 150px;
-            }
-            .receipt-value {
-                color: #111827;
-                flex-grow: 1;
-            }
-            .receipt-footer {
-                margin-top: 40px;
-                display: flex;
-                justify-content: space-between;
-            }
-            .signature-block {
-                text-align: center;
-                width: 45%;
-            }
-            .signature-block p {
-                font-size: 0.95rem;
-                font-weight: bold;
-                color: #4b5563;
-            }
-            .sig-line {
-                border-bottom: 1px solid #1e3a8a;
-                width: 140px;
-                margin: 35px auto 0 auto;
+            #print-section {
+                display: block !important; /* تفعيل الحاوية المعزولة فقط */
+                width: 100% !important;
+                direction: rtl !important;
             }
         }
     </style>
@@ -401,296 +292,199 @@
         </header>
 
         <div class="balance-card">
-            <h3>إجمالي الصافي الحالي</h3>
-            <div class="balance-amount" id="balance">٠ د.ع</div>
+            <span>إجمالي المتبقي الحالي</span>
+            <h2 id="total-balance">0 د.ع</h2>
         </div>
 
-        <div class="stats-container">
+        <div class="stats-grid">
             <div class="stat-box income">
-                <h4>إجمالي القبوضات (+)</h4>
-                <div class="stat-amount" id="money-plus">٠ د.ع</div>
+                <span>إجمالي القبوضات (+)</span>
+                <p id="total-income">0 د.ع</p>
             </div>
             <div class="stat-box expense">
-                <h4>إجمالي المصاريف (-)</h4>
-                <div class="stat-amount" id="money-minus">٠ د.ع</div>
+                <span>إجمالي المصاريف (-)</span>
+                <p id="total-expense">0 د.ع</p>
             </div>
         </div>
 
-        <div class="form-card" id="form-card">
-            <h3 id="form-title">تسجيل عملية جديدة</h3>
-            <form id="form">
-                <div class="form-group">
-                    <label>نوع العملية</label>
-                    <div class="radio-group">
-                        <label class="radio-label">
-                            <input type="radio" name="type" value="income" checked id="radio-income"> قبض (إيراد)
-                        </label>
-                        <label class="radio-label">
-                            <input type="radio" name="type" value="expense" id="radio-expense"> صرف (مصروف)
-                        </label>
-                    </div>
+        <div class="form-section">
+            <h3>تسجيل عملية جديدة</h3>
+            <form id="tx-form">
+                <div class="radio-group">
+                    <input type="radio" id="type-income" name="tx-type" value="income" checked>
+                    <label for="type-income" class="radio-label inc">قَبض (إيراد)</label>
+
+                    <input type="radio" id="type-expense" name="tx-type" value="expense">
+                    <label for="type-expense" class="radio-label exp">صَرف (مصروف)</label>
                 </div>
 
-                <div class="form-group">
-                    <label for="customer">اسم الزبون / الجهة</label>
-                    <input type="text" id="customer" class="form-control" placeholder="اكتب اسم الزبون أو الجهة" list="customers-list" required>
-                    <datalist id="customers-list">
-                        </datalist>
+                <div class="input-block">
+                    <label>اسم الزبون / الجهة</label>
+                    <input type="text" id="tx-name" placeholder="اكتب اسم الزبون أو الجهة" required>
                 </div>
 
-                <div class="form-group">
-                    <label for="text">البيان / الوصف</label>
-                    <input type="text" id="text" class="form-control" placeholder="مثال: دفعة من الحساب، شراء بضاعة..." required>
+                <div class="input-block">
+                    <label>البيان / الوصف</label>
+                    <input type="text" id="tx-desc" placeholder="مثال: دفعة من الحساب، شراء بضاعة..." required>
                 </div>
 
-                <div class="form-group">
-                    <label for="amount">المبلغ (بالدينار العراقي)</label>
-                    <input type="number" id="amount" class="form-control" placeholder="مثال: 25000" required>
+                <div class="input-block">
+                    <label>المبلغ (بالدينار العراقي)</label>
+                    <input type="number" id="tx-amount" placeholder="مثال: 25000" required>
                 </div>
 
-                <button class="btn-submit" id="submit-btn">حفظ العملية</button>
+                <button type="submit" class="btn-submit">حفظ العملية</button>
             </form>
         </div>
 
         <div class="history-section">
             <h3>سجل العمليات الأخيرة</h3>
-            <ul id="list" class="transaction-list">
-                </ul>
+            <div class="transaction-list" id="tx-list">
+                </div>
         </div>
     </div>
 
-    <div id="receipt-zone"></div>
+    <div id="print-section"></div>
 
     <script>
-        const balance = document.getElementById('balance');
-        const money_plus = document.getElementById('money-plus');
-        const money_minus = document.getElementById('money-minus');
-        const list = document.getElementById('list');
-        const form = document.getElementById('form');
-        const text = document.getElementById('text');
-        const amount = document.getElementById('amount');
-        const customerInput = document.getElementById('customer');
-        const customersDatalist = document.getElementById('customers-list');
-        const submitBtn = document.getElementById('submit-btn');
-        const formTitle = document.getElementById('form-title');
+        let transactions = JSON.parse(localStorage.getItem('iraqi_wallet_txs')) || [];
 
-        let editId = null;
+        const form = document.getElementById('tx-form');
+        const totalBalance = document.getElementById('total-balance');
+        const totalIncome = document.getElementById('total-income');
+        const totalExpense = document.getElementById('total-expense');
+        const txList = document.getElementById('tx-list');
 
-        // جلب البيانات المخزنة من ذاكرة الهاتف الداخلية
-        const localStorageTransactions = JSON.parse(localStorage.getItem('iraqi_transactions'));
-        let transactions = localStorage.getItem('iraqi_transactions') !== null ? localStorageTransactions : [];
-
-        function formatIraqiNumber(num) {
-            return Math.round(num).toLocaleString('ar-IQ') + ' د.ع';
+        function formatMoney(amount) {
+            return Number(amount).toLocaleString('ar-EG') + ' د.ع';
         }
 
-        // حفظ ومعالجة مدخلات النموذج (إضافة أو تعديل)
-        function handleFormSubmit(e) {
-            e.preventDefault();
+        function updateUI() {
+            let incomeSum = 0;
+            let expenseSum = 0;
 
-            if (text.value.trim() === '' || amount.value.trim() === '' || customerInput.value.trim() === '') {
-                alert('الرجاء ملء جميع الحقول المطلوبة');
-                return;
-            }
+            txList.innerHTML = '';
 
-            const type = document.querySelector('input[name="type"]:checked').value;
-            const transactionAmount = type === 'expense' ? -Math.abs(+amount.value) : Math.abs(+amount.value);
+            transactions.forEach((tx) => {
+                if(tx.type === 'income') incomeSum += Number(tx.amount);
+                else expenseSum += Number(tx.amount);
 
-            if (editId !== null) {
-                // وضع التعديل
-                transactions = transactions.map(trans => {
-                    if (trans.id === editId) {
-                        return {
-                            ...trans,
-                            customer: customerInput.value.trim(),
-                            text: text.value.trim(),
-                            amount: transactionAmount,
-                            date: new Date().toLocaleDateString('ar-IQ', { hour: '2-digit', minute: '2-digit' }) + ' (معدل)'
-                        };
-                    }
-                    return trans;
-                });
-                
-                editId = null;
-                submitBtn.innerText = 'حفظ العملية';
-                submitBtn.style.backgroundColor = 'var(--primary)';
-                formTitle.innerText = 'تسجيل عملية جديدة';
-            } else {
-                // وضع الإضافة
-                const newTransaction = {
-                    id: Math.floor(Math.random() * 100000000),
-                    customer: customerInput.value.trim(),
-                    text: text.value.trim(),
-                    amount: transactionAmount,
-                    date: new Date().toLocaleDateString('ar-IQ', { hour: '2-digit', minute: '2-digit' })
-                };
-                transactions.push(newTransaction);
-            }
-
-            updateLocalStorage();
-            init();
-
-            text.value = '';
-            amount.value = '';
-            customerInput.value = '';
-        }
-
-        // عرض العملية في القائمة المخصصة للجوال
-        function addTransactionDOM(transaction) {
-            const sign = transaction.amount < 0 ? '-' : '+';
-            const item = document.createElement('li');
-
-            item.classList.add('transaction-item');
-            item.classList.add(transaction.amount < 0 ? 'minus' : 'plus');
-
-            item.innerHTML = `
-                <div class="trans-details">
-                    <span class="trans-customer">👤 ${transaction.customer}</span>
-                    <div class="trans-text">${transaction.text}</div>
-                    <div class="trans-date">📅 ${transaction.date}</div>
-                </div>
-                <div class="action-area">
-                    <span class="trans-amount">${sign}${Math.abs(transaction.amount).toLocaleString('ar-IQ')} د.ع</span>
-                    <div class="btn-actions-container">
-                        <button class="action-btn btn-pdf" onclick="printReceipt(${transaction.id})">📄 وصل PDF</button>
-                        <button class="action-btn btn-edit" onclick="initiateEdit(${transaction.id})">✏️</button>
-                        <button class="action-btn btn-delete" onclick="removeTransaction(${transaction.id})">🗑️</button>
+                const item = document.createElement('div');
+                item.className = `transaction-item ${tx.type}`;
+                item.innerHTML = `
+                    <div class="item-main">
+                        <div class="item-details">
+                            <h4>${tx.name}</h4>
+                            <p>${tx.desc}</p>
+                        </div>
+                        <div class="item-amount">${tx.type === 'income' ? '+' : '-' } ${Number(tx.amount).toLocaleString('ar-EG')} د.ع</div>
                     </div>
-                </div>
-            `;
-
-            list.appendChild(item);
-        }
-
-        // تفعيل وضع التعديل
-        function initiateEdit(id) {
-            const transactionToEdit = transactions.find(t => t.id === id);
-            if (!transactionToEdit) return;
-
-            customerInput.value = transactionToEdit.customer;
-            text.value = transactionToEdit.text;
-            amount.value = Math.abs(transactionToEdit.amount);
-            
-            if (transactionToEdit.amount < 0) {
-                document.getElementById('radio-expense').checked = true;
-            } else {
-                document.getElementById('radio-income').checked = true;
-            }
-
-            editId = id;
-            submitBtn.innerText = 'تحديث وتعديل العملية';
-            submitBtn.style.backgroundColor = 'var(--amber)';
-            formTitle.innerText = 'تعديل بيانات العملية المحددة';
-
-            document.getElementById('form-card').scrollIntoView({ behavior: 'smooth' });
-        }
-
-        function updateValues() {
-            const amounts = transactions.map(t => t.amount);
-
-            const total = amounts.reduce((acc, item) => (acc += item), 0);
-            const income = amounts.filter(item => item > 0).reduce((acc, item) => (acc += item), 0);
-            const expense = amounts.filter(item => item < 0).reduce((acc, item) => (acc += item), 0) * -1;
-
-            balance.innerText = formatIraqiNumber(total);
-            money_plus.innerText = formatIraqiNumber(income);
-            money_minus.innerText = formatIraqiNumber(expense);
-        }
-
-        // تحديث قائمة اقتراحات الزبائن لمنع التكرار
-        function updateCustomersDatalist() {
-            customersDatalist.innerHTML = '';
-            const uniqueCustomers = [...new Set(transactions.map(t => t.customer))];
-            
-            uniqueCustomers.forEach(cust => {
-                const option = document.createElement('option');
-                option.value = cust;
-                customersDatalist.appendChild(option);
+                    <div class="item-meta">
+                        <span>${tx.date}</span>
+                        <div class="actions">
+                            <button class="btn-action btn-pdf" onclick="generatePDF('${tx.id}')">وصل PDF</button>
+                            <button class="btn-action btn-delete" onclick="deleteTx('${tx.id}')">حذف</button>
+                        </div>
+                    </div>
+                `;
+                txList.appendChild(item);
             });
+
+            const netBalance = incomeSum - expenseSum;
+            totalBalance.textContent = formatMoney(netBalance);
+            totalIncome.textContent = formatMoney(incomeSum);
+            totalExpense.textContent = formatMoney(expenseSum);
         }
 
-        function removeTransaction(id) {
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const type = document.querySelector('input[name="tx-type"]:checked').value;
+            const name = document.getElementById('tx-name').value;
+            const desc = document.getElementById('tx-desc').value;
+            const amount = document.getElementById('tx-amount').value;
+            
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('ar-EG') + ' ' + now.toLocaleTimeString('ar-EG', {hour: '2-digit', minute:'2-digit'});
+
+            const newTx = {
+                id: Date.now().toString(),
+                type,
+                name,
+                desc,
+                amount,
+                date: dateStr
+            };
+
+            transactions.unshift(newTx);
+            localStorage.setItem('iraqi_wallet_txs', JSON.stringify(transactions));
+            form.reset();
+            updateUI();
+        });
+
+        function deleteTx(id) {
             if(confirm('هل أنت متأكد من حذف هذه العملية؟')) {
                 transactions = transactions.filter(t => t.id !== id);
-                if (editId === id) {
-                    editId = null;
-                    submitBtn.innerText = 'حفظ العملية';
-                    submitBtn.style.backgroundColor = 'var(--primary)';
-                    formTitle.innerText = 'تسجيل عملية جديدة';
-                    text.value = ''; amount.value = ''; customerInput.value = '';
-                }
-                updateLocalStorage();
-                init();
+                localStorage.setItem('iraqi_wallet_txs', JSON.stringify(transactions));
+                updateUI();
             }
         }
 
-        // توليد وبناء الوصل والطباعة الفورية بصيغة PDF
-        function printReceipt(id) {
-            const trans = transactions.find(t => t.id === id);
-            if (!trans) return;
+        // دالة توليد وطباعة الوصل السحابي المعزول للهواتف
+        function generatePDF(id) {
+            const tx = transactions.find(t => t.id === id);
+            if(!tx) return;
 
-            const isIncome = trans.amount >= 0;
-            const title = isIncome ? 'وصل قبض مالي' : 'وصل صرف مالي';
-            const partyLabel = isIncome ? 'استلمت من السيد / السادة:' : 'دفعت إلى السيد / السادة:';
-            const absAmountStr = Math.abs(trans.amount).toLocaleString('ar-IQ') + ' دينار عراقي لا غير';
-
-            const receiptZone = document.getElementById('receipt-zone');
-            receiptZone.innerHTML = `
-                <div class="receipt-box">
-                    <div class="receipt-header">
-                        <h2>المحفظة الذكية - وصل مالي</h2>
-                        <p>رقم السند المرجعي: ${trans.id}</p>
-                        <p>تاريخ وتوقيت الإصدار: ${trans.date}</p>
+            const printSection = document.getElementById('print-section');
+            
+            // قالب الفاتورة الحرارية النظيفة بدون عناصر الموقع الخارجية
+            printSection.innerHTML = `
+                <div style="direction: rtl; font-family: 'Cairo', sans-serif; padding: 20px; max-width: 400px; margin: 0 auto; color: #000; background: #fff; border: 1px dashed #000; border-radius: 8px;">
+                    <div style="text-align: center; margin-bottom: 20px;">
+                        <h2 style="font-size: 20px; margin: 0; font-weight: 700;">المحفظة العراقية الذكية</h2>
+                        <p style="font-size: 11px; color: #555; margin: 5px 0 0 0;">وصل معاملات مالي معتمد</p>
                     </div>
-                    <div class="receipt-body">
-                        <div class="receipt-row">
-                            <span class="receipt-label">نوع السند:</span>
-                            <span class="receipt-value" style="font-weight:bold; color:${isIncome?'#10b981':'#ef4444'}">${title}</span>
-                        </div>
-                        <div class="receipt-row">
-                            <span class="receipt-label">${partyLabel}</span>
-                            <span class="receipt-value" style="font-weight:bold;">${trans.customer}</span>
-                        </div>
-                        <div class="receipt-row">
-                            <span class="receipt-label">مبلغ وقدره:</span>
-                            <span class="receipt-value" style="font-weight: bold; background-color:#f3f4f6; padding: 4px 8px; border-radius:4px;">${absAmountStr}</span>
-                        </div>
-                        <div class="receipt-row">
-                            <span class="receipt-label">وذلك لغرض / عن:</span>
-                            <span class="receipt-value">${trans.text}</span>
-                        </div>
+                    
+                    <div style="border-bottom: 1px dashed #000; margin-bottom: 15px;"></div>
+                    
+                    <table style="width: 100%; font-size: 14px; border-collapse: collapse; line-height: 2;">
+                        <tr>
+                            <td style="font-weight: bold; width: 35%; padding: 4px 0;">نوع العملية:</td>
+                            <td style="padding: 4px 0;">${tx.type === 'income' ? 'قبض وإيراد' : 'صرف ومصروف'}</td>
+                        </tr>
+                        <tr>
+                            <td style="font-weight: bold; padding: 4px 0;">الزبون/الجهة:</td>
+                            <td style="padding: 4px 0;">${tx.name}</td>
+                        </tr>
+                        <tr>
+                            <td style="font-weight: bold; padding: 4px 0;">البيان والوصف:</td>
+                            <td style="padding: 4px 0;">${tx.desc}</td>
+                        </tr>
+                        <tr>
+                            <td style="font-weight: bold; padding: 4px 0;">التاريخ:</td>
+                            <td style="font-size: 12px; padding: 4px 0;">${tx.date}</td>
+                        </tr>
+                    </table>
+                    
+                    <div style="border-bottom: 1px dashed #000; margin: 15px 0;"></div>
+                    
+                    <div style="background: #f8fafc; padding: 12px; border-radius: 6px; text-align: center; border: 1px solid #e2e8f0;">
+                        <span style="font-size: 13px; color: #475569; display: block; margin-bottom: 4px;">المبلغ الإجمالي</span>
+                        <strong style="font-size: 22px; color: #000;">${Number(tx.amount).toLocaleString('ar-EG')} د.ع</strong>
                     </div>
-                    <div class="receipt-footer">
-                        <div class="signature-block">
-                            <p>توقيع وتنفيذ المحاسب</p>
-                            <div class="sig-line"></div>
-                        </div>
-                        <div class="signature-block">
-                            <p>توقيع العميل / الزبون</p>
-                            <div class="sig-line"></div>
-                        </div>
+                    
+                    <div style="text-align: center; margin-top: 25px; font-size: 10px; color: #64748b;">
+                        شكراً لتعاملكم معنا <br> تم إنشاؤه عبر نظام المحفظة الإلكترونية الذكية
                     </div>
                 </div>
             `;
 
-            document.body.classList.add('printing-receipt');
+            // إطلاق أمر الطباعة الفوري للمتصفح
             window.print();
-            document.body.classList.remove('printing-receipt');
         }
 
-        function updateLocalStorage() {
-            localStorage.setItem('iraqi_transactions', JSON.stringify(transactions));
-        }
-
-        function init() {
-            list.innerHTML = '';
-            transactions.forEach(addTransactionDOM);
-            updateValues();
-            updateCustomersDatalist();
-        }
-
-        init();
-        form.addEventListener('submit', handleFormSubmit);
+        // تشغيل الواجهة عند فتح التطبيق أول مرة
+        updateUI();
     </script>
 </body>
 </html>
