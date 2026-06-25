@@ -4,12 +4,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>المحفظة العراقية الذكية</title>
+    
+    <!-- وسم لجعل التطبيق يفتح كـ تطبيق كامل بدون شريط المتصفح (للآيفون والأندرويد) -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="المحفظة">
+    <meta name="apple-mobile-web-app-status-bar-style" content="#1e3a8a">
+    <meta name="mobile-web-app-capable" content="yes">
+
+    <!-- أيقونة التطبيق الفخمة والمرتبة عند التنصيب على شاشة الهاتف -->
+    <link rel="apple-touch-icon" href="https://img.icons8.com/fluent/512/wallet.png">
+    <link rel="icon" type="image/png" href="https://img.icons8.com/fluent/512/wallet.png">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    
     <style>
         :root {
             --primary: #2563eb;
+            --primary-hover: #1d4ed8;
             --success: #16a34a;
             --danger: #dc2626;
             --background: #f8fafc;
@@ -31,30 +44,128 @@
             padding: 20px 10px;
             display: flex;
             justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
         }
 
+        /* ==================== بنر تثبيت التطبيق على الشاشة ==================== */
+        .install-prompt {
+            display: none; /* يتم التحكم به عبر الجافاسكريبت */
+            background: #1e3a8a;
+            color: white;
+            padding: 12px 15px;
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 92%;
+            max-width: 420px;
+            border-radius: 14px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            z-index: 99999;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12.5px;
+            line-height: 1.6;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .install-text {
+            flex: 1;
+            padding-left: 10px;
+        }
+
+        .btn-close-prompt {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            padding: 4px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        /* ==================== واجهة تسجيل الدخول ==================== */
+        .auth-container {
+            width: 100%;
+            max-width: 420px;
+            background: var(--surface);
+            border-radius: 16px;
+            padding: 30px 25px;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05);
+            border: 1px solid #e2e8f0;
+            margin-top: 40px;
+            display: block;
+        }
+
+        .auth-header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .auth-header h2 {
+            font-size: 22px;
+            color: #1e3a8a;
+            margin-bottom: 5px;
+        }
+
+        .auth-header p {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .auth-toggle {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 13px;
+        }
+
+        .auth-toggle span {
+            color: var(--primary);
+            cursor: pointer;
+            font-weight: 600;
+            text-decoration: underline;
+        }
+
+        /* ==================== واجهة التطبيق الرئيسية ==================== */
         .app-container {
             width: 100%;
             max-width: 500px;
-            display: flex;
+            display: none; 
             flex-direction: column;
             gap: 20px;
         }
 
         header {
-            text-align: center;
-            margin-bottom: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 10px;
         }
 
         header h1 {
-            font-size: 24px;
+            font-size: 20px;
             color: #1e3a8a;
             font-weight: 700;
         }
 
-        header p {
-            font-size: 13px;
+        .user-info {
+            font-size: 12px;
             color: var(--text-muted);
+            text-align: left;
+        }
+
+        .btn-logout {
+            background: none;
+            border: none;
+            color: var(--danger);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 2px;
+            text-decoration: underline;
         }
 
         .balance-card {
@@ -115,7 +226,7 @@
         }
 
         .form-section h3 {
-            font-size: 16px;
+            font-size: 15px;
             margin-bottom: 15px;
             border-bottom: 1px solid #f1f5f9;
             padding-bottom: 8px;
@@ -172,15 +283,17 @@
 
         .input-block input {
             width: 100%;
-            padding: 10px;
+            padding: 11px;
             border: 1px solid #cbd5e1;
             border-radius: 8px;
             font-size: 14px;
             outline: none;
+            background: #fff;
         }
 
         .input-block input:focus {
             border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
         }
 
         .btn-submit {
@@ -195,8 +308,10 @@
             cursor: pointer;
         }
 
+        .btn-submit:hover { background: #0f172a; }
+
         .history-section h3 {
-            font-size: 16px;
+            font-size: 15px;
             margin-bottom: 12px;
             color: var(--text-muted);
         }
@@ -261,54 +376,76 @@
         .btn-pdf { color: var(--primary); font-weight: 600; }
         .btn-delete { color: var(--danger); }
 
-        /* حاوية الطباعة المعزولة للهواتف والحواسب */
-        #print-section {
-            display: none;
-        }
+        /* حاوية الطباعة المعزولة تماماً */
+        #print-section { display: none; }
 
         @media print {
-            body {
-                background: #ffffff !important;
-                padding: 0 !important;
-                margin: 0 !important;
-            }
-            .app-container {
-                display: none !important;
-            }
-            #print-section {
-                display: block !important;
-                width: 100% !important;
-                direction: rtl !important;
-            }
+            body { background: #fff !important; padding: 0 !important; margin: 0 !important; }
+            .app-container, .auth-container, .install-prompt { display: none !important; }
+            #print-section { display: block !important; width: 100% !important; direction: rtl !important; }
         }
     </style>
 </head>
 <body>
 
-    <div class="app-container">
+    <!-- بنر إرشادات التثبيت الذكي على الشاشة الرئيسية -->
+    <div class="install-prompt" id="install-box">
+        <div class="install-text" id="install-text-msg">جاري فحص الجهاز...</div>
+        <button class="btn-close-prompt" onclick="closeInstallPrompt()">إغلاق</button>
+    </div>
+
+    <!-- ==================== واجهة تسجيل الدخول وإنشاء الحساب ==================== -->
+    <div class="auth-container" id="auth-box">
+        <div class="auth-header">
+            <h2 id="auth-title">تسجيل الدخول للمحفظة</h2>
+            <p id="auth-desc">الرجاء إدخال بياناتك لحفظ وإدارة وصولاتك بأمان سحابي</p>
+        </div>
+        <form id="auth-form">
+            <div class="input-block">
+                <label>البريد الإلكتروني</label>
+                <input type="email" id="auth-email" placeholder="example@mail.com" required>
+            </div>
+            <div class="input-block">
+                <label>كلمة السر</label>
+                <input type="password" id="auth-password" placeholder="••••••••" minlength="6" required>
+            </div>
+            <button type="submit" class="btn-submit" id="btn-auth-submit" style="background: var(--primary);">دخول آمن</button>
+        </form>
+        <div class="auth-toggle">
+            <p id="auth-toggle-text">ليس لديك حساب؟ <span onclick="toggleAuthMode()">إنشاء حساب جديد</span></p>
+        </div>
+    </div>
+
+    <!-- ==================== واجهة التطبيق الرئيسية ==================== -->
+    <div class="app-container" id="app-box">
         <header>
-            <h1>المحفظة العراقية الذكية</h1>
-            <p>إدارة الحسابات والقبوضات بالدينار العراقي (نسخة سحابية)</p>
+            <div>
+                <h1>المحفظة العراقية الذكية</h1>
+            </div>
+            <div class="user-info">
+                <span id="user-email-display">...</span><br>
+                <button class="btn-logout" onclick="logoutUser()">تسجيل خروج</button>
+            </div>
         </header>
 
         <div class="balance-card">
-            <span>إجمالي المتبقي الحالي</span>
+            <span>إجمالي المتبقي المالي الخاص بك</span>
             <h2 id="total-balance">جاري التحميل...</h2>
         </div>
 
         <div class="stats-grid">
             <div class="stat-box income">
-                <span>إجمالي القبوضات (+)</span>
+                <span>إجمالي قبوضاتك (+)</span>
                 <p id="total-income">0 د.ع</p>
             </div>
             <div class="stat-box expense">
-                <span>إجمالي المصاريف (-)</span>
+                <span>إجمالي مصاريفك (-)</span>
                 <p id="total-expense">0 د.ع</p>
             </div>
         </div>
 
         <div class="form-section">
-            <h3>تسجيل عملية جديدة</h3>
+            <h3>تسجيل عملية جديدة في حسابك</h3>
             <form id="tx-form">
                 <div class="radio-group">
                     <input type="radio" id="type-income" name="tx-type" value="income" checked>
@@ -325,7 +462,7 @@
 
                 <div class="input-block">
                     <label>البيان / الوصف</label>
-                    <input type="text" id="tx-desc" placeholder="مثال: دفعة من الحساب، شراء بضاعة..." required>
+                    <input type="text" id="tx-desc" placeholder="مثال: دفعة من الحساب..." required>
                 </div>
 
                 <div class="input-block">
@@ -333,27 +470,24 @@
                     <input type="number" id="tx-amount" placeholder="مثال: 25000" required>
                 </div>
 
-                <button type="submit" class="btn-submit">حفظ في السحاب</button>
+                <button type="submit" class="btn-submit">حفظ في سحابتك الخاصة</button>
             </form>
         </div>
 
         <div class="history-section">
-            <h3>سجل العمليات الأخيرة الحية</h3>
-            <div class="transaction-list" id="tx-list">
-                <!-- العمليات السحابية ستظهر هنا تلقائياً -->
-            </div>
+            <h3>سجل وصولاتك الخاصة</h3>
+            <div class="transaction-list" id="tx-list"></div>
         </div>
     </div>
 
-    <!-- حاوية الطباعة المعزولة -->
+    <!-- حاوية الطباعة والـ PDF -->
     <div id="print-section"></div>
 
-    <!-- استدعاء مكتبات الـ Firebase المتوافقة (Compat SDK) لتشغيلها مباشرة على المتصفح -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
     <script>
-        // إعدادات Firebase السحابية الخاصة بك
         const firebaseConfig = {
             apiKey: "AIzaSyAkBFEtRQBub11C7rgbKXqoYses2j7e2Bo",
             authDomain: "iraqi-wallet-9b533.firebaseapp.com",
@@ -364,17 +498,107 @@
             measurementId: "G-PY46CC9K17"
         };
 
-        // تهيئة الـ Firebase وقاعدة البياناتfirestore
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
+        const auth = firebase.auth();
 
+        let currentUser = null;
         let transactions = [];
+        let isLoginMode = true; 
+        let unsubscribeSnapshot = null; 
 
+        const authBox = document.getElementById('auth-box');
+        const appBox = document.getElementById('app-box');
+        const authForm = document.getElementById('auth-form');
         const form = document.getElementById('tx-form');
         const totalBalance = document.getElementById('total-balance');
         const totalIncome = document.getElementById('total-income');
         const totalExpense = document.getElementById('total-expense');
         const txList = document.getElementById('tx-list');
+
+        // نِظام فحص التثبيت والـ PWA على الشاشة
+        function checkAppInstallation() {
+            // هل التطبيق يفتح حالياً من داخل الشاشة كـ App؟
+            const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+            
+            if (!isStandalone) {
+                const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+                const installBox = document.getElementById('install-box');
+                const msg = document.getElementById('install-text-msg');
+                
+                if (isIOS) {
+                    msg.innerHTML = "📲 <strong>لتثبيت المحفظة كأنها تطبيق على الآيفون:</strong> اضغط على زر <strong>المشاركة (Share)</strong> أسفل المتصفح ثم اختر <strong>إضافة إلى الشاشة الرئيسية (Add to Home Screen)</strong>.";
+                } else {
+                    msg.innerHTML = "📲 <strong>لتثبيت المحفظة على شاشة هاتفك:</strong> اضغط على خيارات المتصفح (النقاط الثلاثة العلوية) ثم اختر <strong>تثبيت التطبيق</strong> أو <strong>إضافة للشاشة الرئيسية</strong>.";
+                }
+                installBox.style.display = 'flex';
+            }
+        }
+
+        function closeInstallPrompt() {
+            document.getElementById('install-box').style.display = 'none';
+        }
+
+        // تشغيل فحص التثبيت فور فتح الصفحة
+        window.addEventListener('DOMContentLoaded', checkAppInstallation);
+
+        function toggleAuthMode() {
+            isLoginMode = !isLoginMode;
+            const title = document.getElementById('auth-title');
+            const desc = document.getElementById('auth-desc');
+            const btn = document.getElementById('btn-auth-submit');
+            const toggleText = document.getElementById('auth-toggle-text');
+
+            if (isLoginMode) {
+                title.textContent = "تسجيل الدخول للمحفظة";
+                desc.textContent = "الرجاء إدخال بياناتك لحفظ وإدارة وصولاتك بأمان سحابي";
+                btn.textContent = "دخول آمن";
+                toggleText.innerHTML = 'ليس لديك حساب؟ <span onclick="toggleAuthMode()">إنشاء حساب جديد</span>';
+            } else {
+                title.textContent = "إنشاء حساب جديد مالي";
+                desc.textContent = "قم بإنشاء حسابك المستقل لتتمكن من عزل وإدارة وصولاتك بخصوصية تامة";
+                btn.textContent = "تسجيل الحساب";
+                toggleText.innerHTML = 'لديك حساب بالفعل؟ <span onclick="toggleAuthMode()">سجل دخولك الآن</span>';
+            }
+        }
+
+        authForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('auth-email').value;
+            const password = document.getElementById('auth-password').value;
+
+            if (isLoginMode) {
+                auth.signInWithEmailAndPassword(email, password)
+                    .catch(err => alert("خطأ في تسجيل الدخول: " + err.message));
+            } else {
+                auth.createUserWithEmailAndPassword(email, password)
+                    .then(() => alert("تم إنشاء حسابك السحابي بنجاح!"))
+                    .catch(err => alert("خطأ في إنشاء الحساب: " + err.message));
+            }
+        });
+
+        function logoutUser() {
+            if(confirm('هل تريد تسجيل الخروج؟')) {
+                if (unsubscribeSnapshot) unsubscribeSnapshot(); 
+                auth.signOut();
+            }
+        }
+
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                currentUser = user;
+                document.getElementById('user-email-display').textContent = user.email;
+                authBox.style.display = 'none';
+                appBox.style.display = 'flex';
+                authForm.reset();
+                startListeningForTransactions(); 
+            } else {
+                currentUser = null;
+                authBox.style.display = 'block';
+                appBox.style.display = 'none';
+                txList.innerHTML = '';
+            }
+        });
 
         function formatMoney(amount) {
             return Number(amount).toLocaleString('ar-EG') + ' د.ع';
@@ -383,11 +607,10 @@
         function updateUI() {
             let incomeSum = 0;
             let expenseSum = 0;
-
             txList.innerHTML = '';
 
             if (transactions.length === 0) {
-                txList.innerHTML = '<p style="text-align:center; font-size:13px; color:#64748b; padding:15px;">لا توجد عمليات مسجلة بالسحاب حالياً.</p>';
+                txList.innerHTML = '<p style="text-align:center; font-size:13px; color:#64748b; padding:15px;">لا توجد عمليات مسجلة بحسابك حالياً.</p>';
                 totalBalance.textContent = formatMoney(0);
                 totalIncome.textContent = formatMoney(0);
                 totalExpense.textContent = formatMoney(0);
@@ -425,23 +648,26 @@
             totalExpense.textContent = formatMoney(expenseSum);
         }
 
-        // الاستماع المباشر والحي للتغييرات في السحاب (Real-time Sync)
-        db.collection('transactions').orderBy('createdAt', 'desc').onSnapshot((snapshot) => {
-            transactions = [];
-            snapshot.forEach((doc) => {
-                transactions.push({
-                    id: doc.id,
-                    ...doc.data()
+        function startListeningForTransactions() {
+            if (!currentUser) return;
+            
+            unsubscribeSnapshot = db.collection('transactions')
+                .where('userId', '==', currentUser.uid)
+                .orderBy('createdAt', 'desc')
+                .onSnapshot((snapshot) => {
+                    transactions = [];
+                    snapshot.forEach((doc) => {
+                        transactions.push({ id: doc.id, ...doc.data() });
+                    });
+                    updateUI();
+                }, (error) => {
+                    console.error("خطأ جلب البيانات: ", error);
                 });
-            });
-            updateUI();
-        }, (error) => {
-            console.error("حدث خطأ أثناء جلب البيانات: ", error);
-        });
+        }
 
-        // تسجيل وحفظ العملية بالسحاب
         form.addEventListener('submit', (e) => {
             e.preventDefault();
+            if (!currentUser) return;
             
             const type = document.querySelector('input[name="tx-type"]:checked').value;
             const name = document.getElementById('tx-name').value;
@@ -452,6 +678,7 @@
             const dateStr = now.toLocaleDateString('ar-EG') + ' ' + now.toLocaleTimeString('ar-EG', {hour: '2-digit', minute:'2-digit'});
 
             const newTx = {
+                userId: currentUser.uid, 
                 type,
                 name,
                 desc,
@@ -463,15 +690,15 @@
             db.collection('transactions').add(newTx)
                 .then(() => {
                     form.reset();
+                    document.getElementById('type-income').checked = true;
                 })
                 .catch((error) => {
-                    alert('خطأ في الاتصال بالسحاب: ' + error.message);
+                    alert('خطأ حفظ: ' + error.message);
                 });
         });
 
-        // حذف العملية من السحاب نهائياً
         function deleteTx(id) {
-            if(confirm('هل أنت متأكد من حذف هذه العملية من السحاب نهائياً؟')) {
+            if(confirm('هل أنت متأكد من حذف هذا الوصل من حسابك نهائياً؟')) {
                 db.collection('transactions').doc(id).delete()
                     .catch((error) => {
                         alert('حدث خطأ أثناء محاولة الحذف: ' + error.message);
@@ -479,56 +706,40 @@
             }
         }
 
-        // نظام توليد وصل الطباعة المخصص والمعزول
+        // تعديل دالة الطباعة وتوليد الـ PDF لتتوافق بنسبة 100% مع نظام نظام تشغيل الآيفون (iOS Safari)
         function generatePDF(id) {
             const tx = transactions.find(t => t.id === id);
             if(!tx) return;
 
             const printSection = document.getElementById('print-section');
-            
             printSection.innerHTML = `
                 <div style="direction: rtl; font-family: 'Cairo', sans-serif; padding: 20px; max-width: 400px; margin: 0 auto; color: #000; background: #fff; border: 1px dashed #000; border-radius: 8px;">
                     <div style="text-align: center; margin-bottom: 20px;">
                         <h2 style="font-size: 20px; margin: 0; font-weight: 700;">المحفظة العراقية الذكية</h2>
-                        <p style="font-size: 11px; color: #555; margin: 5px 0 0 0;">وصل معاملات مالي معتمد - نسّخة سحابية</p>
+                        <p style="font-size: 11px; color: #555; margin: 5px 0 0 0;">وصل معاملات مالي - نسخة الحساب الآمن</p>
                     </div>
-                    
                     <div style="border-bottom: 1px dashed #000; margin-bottom: 15px;"></div>
-                    
                     <table style="width: 100%; font-size: 14px; border-collapse: collapse; line-height: 2;">
-                        <tr>
-                            <td style="font-weight: bold; width: 35%; padding: 4px 0;">نوع العملية:</td>
-                            <td style="padding: 4px 0;">${tx.type === 'income' ? 'قبض وإيراد' : 'صرف ومصروف'}</td>
-                        </tr>
-                        <tr>
-                            <td style="font-weight: bold; padding: 4px 0;">الزبون/الجهة:</td>
-                            <td style="padding: 4px 0;">${tx.name}</td>
-                        </tr>
-                        <tr>
-                            <td style="font-weight: bold; padding: 4px 0;">البيان والوصف:</td>
-                            <td style="padding: 4px 0;">${tx.desc}</td>
-                        </tr>
-                        <tr>
-                            <td style="font-weight: bold; padding: 4px 0;">التاريخ:</td>
-                            <td style="font-size: 12px; padding: 4px 0;">${tx.date}</td>
-                        </tr>
+                        <tr><td style="font-weight: bold; width: 35%; padding: 4px 0;">نوع العملية:</td><td>${tx.type === 'income' ? 'قبض وإيراد' : 'صرف ومصروف'}</td></tr>
+                        <tr><td style="font-weight: bold; padding: 4px 0;">الزبون/الجهة:</td><td>${tx.name}</td></tr>
+                        <tr><td style="font-weight: bold; padding: 4px 0;">البيان والوصف:</td><td>${tx.desc}</td></tr>
+                        <tr><td style="font-weight: bold; padding: 4px 0;">التاريخ:</td><td style="font-size: 12px;">${tx.date}</td></tr>
                     </table>
-                    
                     <div style="border-bottom: 1px dashed #000; margin: 15px 0;"></div>
-                    
                     <div style="background: #f8fafc; padding: 12px; border-radius: 6px; text-align: center; border: 1px solid #e2e8f0;">
                         <span style="font-size: 13px; color: #475569; display: block; margin-bottom: 4px;">المبلغ الإجمالي</span>
                         <strong style="font-size: 22px; color: #000;">${Number(tx.amount).toLocaleString('ar-EG')} د.ع</strong>
                     </div>
-                    
                     <div style="text-align: center; margin-top: 25px; font-size: 10px; color: #64748b;">
-                        شكراً لتعاملكم معنا <br> تم حفظه ومزامنته عبر السحاب الآمن لجوجل
+                        شكراً لتعاملكم معنا <br> تم حفظه سحابياً بأمان لحسابك
                     </div>
                 </div>
             `;
-
-            window.print();
+            
+            // إضافة مهلة زمنية قدرها 500 ملي ثانية لحل مشكلة الصفحة الفارغة في الآيفون
+            setTimeout(() => {
+                window.print();
+            }, 550);
         }
     </script>
 </body>
-</html>
