@@ -518,7 +518,6 @@
 
         // نِظام فحص التثبيت والـ PWA على الشاشة
         function checkAppInstallation() {
-            // هل التطبيق يفتح حالياً من داخل الشاشة كـ App؟
             const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
             
             if (!isStandalone) {
@@ -539,7 +538,6 @@
             document.getElementById('install-box').style.display = 'none';
         }
 
-        // تشغيل فحص التثبيت فور فتح الصفحة
         window.addEventListener('DOMContentLoaded', checkAppInstallation);
 
         function toggleAuthMode() {
@@ -648,98 +646,20 @@
             totalExpense.textContent = formatMoney(expenseSum);
         }
 
+        // ==================== التعديل الجوهري هنا لحل مشكلة جاري التحميل ====================
         function startListeningForTransactions() {
             if (!currentUser) return;
             
+            // قمنا بإزالة السيرفر رانك .orderBy لتفادي مشكلة حظر الفهرسة من السيرفر
             unsubscribeSnapshot = db.collection('transactions')
                 .where('userId', '==', currentUser.uid)
-                .orderBy('createdAt', 'desc')
                 .onSnapshot((snapshot) => {
                     transactions = [];
                     snapshot.forEach((doc) => {
                         transactions.push({ id: doc.id, ...doc.data() });
                     });
-                    updateUI();
-                }, (error) => {
-                    console.error("خطأ جلب البيانات: ", error);
-                });
-        }
-
-        form.addEventListener('submit', (e) => {
-            e.preventDefault();
-            if (!currentUser) return;
-            
-            const type = document.querySelector('input[name="tx-type"]:checked').value;
-            const name = document.getElementById('tx-name').value;
-            const desc = document.getElementById('tx-desc').value;
-            const amount = document.getElementById('tx-amount').value;
-            
-            const now = new Date();
-            const dateStr = now.toLocaleDateString('ar-EG') + ' ' + now.toLocaleTimeString('ar-EG', {hour: '2-digit', minute:'2-digit'});
-
-            const newTx = {
-                userId: currentUser.uid, 
-                type,
-                name,
-                desc,
-                amount: Number(amount),
-                date: dateStr,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            };
-
-            db.collection('transactions').add(newTx)
-                .then(() => {
-                    form.reset();
-                    document.getElementById('type-income').checked = true;
-                })
-                .catch((error) => {
-                    alert('خطأ حفظ: ' + error.message);
-                });
-        });
-
-        function deleteTx(id) {
-            if(confirm('هل أنت متأكد من حذف هذا الوصل من حسابك نهائياً؟')) {
-                db.collection('transactions').doc(id).delete()
-                    .catch((error) => {
-                        alert('حدث خطأ أثناء محاولة الحذف: ' + error.message);
-                    });
-            }
-        }
-
-        // تعديل دالة الطباعة وتوليد الـ PDF لتتوافق بنسبة 100% مع نظام نظام تشغيل الآيفون (iOS Safari)
-        function generatePDF(id) {
-            const tx = transactions.find(t => t.id === id);
-            if(!tx) return;
-
-            const printSection = document.getElementById('print-section');
-            printSection.innerHTML = `
-                <div style="direction: rtl; font-family: 'Cairo', sans-serif; padding: 20px; max-width: 400px; margin: 0 auto; color: #000; background: #fff; border: 1px dashed #000; border-radius: 8px;">
-                    <div style="text-align: center; margin-bottom: 20px;">
-                        <h2 style="font-size: 20px; margin: 0; font-weight: 700;">المحفظة العراقية الذكية</h2>
-                        <p style="font-size: 11px; color: #555; margin: 5px 0 0 0;">وصل معاملات مالي - نسخة الحساب الآمن</p>
-                    </div>
-                    <div style="border-bottom: 1px dashed #000; margin-bottom: 15px;"></div>
-                    <table style="width: 100%; font-size: 14px; border-collapse: collapse; line-height: 2;">
-                        <tr><td style="font-weight: bold; width: 35%; padding: 4px 0;">نوع العملية:</td><td>${tx.type === 'income' ? 'قبض وإيراد' : 'صرف ومصروف'}</td></tr>
-                        <tr><td style="font-weight: bold; padding: 4px 0;">الزبون/الجهة:</td><td>${tx.name}</td></tr>
-                        <tr><td style="font-weight: bold; padding: 4px 0;">البيان والوصف:</td><td>${tx.desc}</td></tr>
-                        <tr><td style="font-weight: bold; padding: 4px 0;">التاريخ:</td><td style="font-size: 12px;">${tx.date}</td></tr>
-                    </table>
-                    <div style="border-bottom: 1px dashed #000; margin: 15px 0;"></div>
-                    <div style="background: #f8fafc; padding: 12px; border-radius: 6px; text-align: center; border: 1px solid #e2e8f0;">
-                        <span style="font-size: 13px; color: #475569; display: block; margin-bottom: 4px;">المبلغ الإجمالي</span>
-                        <strong style="font-size: 22px; color: #000;">${Number(tx.amount).toLocaleString('ar-EG')} د.ع</strong>
-                    </div>
-                    <div style="text-align: center; margin-top: 25px; font-size: 10px; color: #64748b;">
-                        شكراً لتعاملكم معنا <br> تم حفظه سحابياً بأمان لحسابك
-                    </div>
-                </div>
-            `;
-            
-            // إضافة مهلة زمنية قدرها 500 ملي ثانية لحل مشكلة الصفحة الفارغة في الآيفون
-            setTimeout(() => {
-                window.print();
-            }, 550);
-        }
-    </script>
-</body>
+                    
+                    // ترتيب العمليات محلياً من الأحدث للأقدم بواسطة الجافا سكريبت بشكل آمن ومضمون
+                    transactions.sort((a, b) => {
+                        const timeA = a.createdAt && typeof a.createdAt.toMillis === 'function' ? a.createdAt.toMillis() : Date.now();
+                        const timeB = b.createdAt && typeof b.createdAt.toMillis === 'function' ? b.createdAt.toMillis()Normally I can help with things like this, but I don't seem to have access to that content. You can try again or ask me for something else.
