@@ -155,6 +155,7 @@
             font-size: 12px;
             color: var(--text-muted);
             text-align: left;
+            line-height: 1.4;
         }
 
         .btn-logout {
@@ -342,7 +343,7 @@
             align-items: flex-start;
         }
 
-        .item-details h4 { font-size: 15px; font-weight: 600; }
+        .item-details h4 { font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
         .item-details p { font-size: 12px; color: var(--text-muted); }
         .item-amount { font-weight: 700; font-size: 16px; }
         
@@ -400,7 +401,20 @@
                 <label>كلمة السر</label>
                 <input type="password" id="auth-password" placeholder="••••••••" minlength="6" required>
             </div>
-            <button type="submit" class="btn-submit" id="btn-auth-submit" style="background: var(--primary);">دخول آمن</button>
+            
+            <!-- الحقول الجديدة الخاصة بالشركة والمندوب عند إنشاء الحساب -->
+            <div id="signup-extra-fields" style="display: none; border-top: 1px dashed #e2e8f0; padding-top: 15px; margin-top: 15px;">
+                <div class="input-block">
+                    <label>اسم الشركة / المذخر التجاري</label>
+                    <input type="text" id="auth-company" placeholder="مثال: شركة الهدى أو مذخر بغداد الدولي">
+                </div>
+                <div class="input-block" style="display: flex; align-items: center; gap: 10px; margin-top: 10px;">
+                    <input type="checkbox" id="auth-is-rep" style="width: 18px; height: 18px; cursor: pointer;">
+                    <label for="auth-is-rep" style="margin-bottom:0; cursor:pointer; font-size:13px;">أعرف عن نفسي كمندوب تجاري معتمد</label>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-submit" id="btn-auth-submit" style="background: var(--primary); margin-top: 10px;">دخول آمن</button>
         </form>
         <div class="auth-toggle">
             <p id="auth-toggle-text">ليس لديك حساب؟ <span onclick="toggleAuthMode()">إنشاء حساب جديد</span></p>
@@ -467,6 +481,12 @@
 
         <div class="history-section">
             <h3>سجل وصولاتك الخاصة</h3>
+            
+            <!-- حقل البحث الذكي الجديد برقم الوصل التسلسلي -->
+            <div class="input-block" style="margin-bottom: 15px;">
+                <input type="text" id="search-receipt" placeholder="🔍 ابحث برقم الوصل التسلسلي المستهدف..." style="padding: 11px; border-radius: 8px; border: 1px solid #cbd5e1; width: 100%; font-size: 13px;">
+            </div>
+
             <div class="transaction-list" id="tx-list"></div>
         </div>
     </div>
@@ -494,6 +514,7 @@
         const auth = firebase.auth();
 
         let currentUser = null;
+        let cachedUserProfile = null; // لحفظ بيانات المندوب والشركة محلياً
         let transactions = [];
         let isLoginMode = true; 
         let unsubscribeSnapshot = null; 
@@ -507,6 +528,8 @@
         const totalIncome = document.getElementById('total-income');
         const totalExpense = document.getElementById('total-expense');
         const txList = document.getElementById('tx-list');
+        const signupExtraFields = document.getElementById('signup-extra-fields');
+        const searchReceipt = document.getElementById('search-receipt');
 
         // ==================== نظام فحص وتثبيت التطبيق الحقيقي الحركي ====================
         function checkAppInstallation() {
@@ -546,15 +569,17 @@
                 desc.textContent = "الرجاء إدخال بياناتك لحفظ وإدارة وصولاتك بأمان سحابي";
                 btn.textContent = "دخول آمن";
                 toggleText.innerHTML = 'ليس لديك حساب؟ <span onclick="toggleAuthMode()">إنشاء حساب جديد</span>';
+                signupExtraFields.style.display = 'none';
             } else {
                 title.textContent = "إنشاء حساب جديد مالي";
                 desc.textContent = "قم بإنشاء حسابك المستقل لتتمكن من عزل وإدارة وصولاتك بخصوصية تامة";
                 btn.textContent = "تسجيل الحساب الجديد";
                 toggleText.innerHTML = 'لديك حساب بالفعل؟ <span onclick="toggleAuthMode()">سجل دخولك الآن</span>';
+                signupExtraFields.style.display = 'block';
             }
         }
 
-        // معالجة إرسال نموذج التحقق والدخول
+        // معالجة إرسال نموذج التحقق والدخول وإنشاء الحساب التجاري
         authForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const email = document.getElementById('auth-email').value;
@@ -573,9 +598,20 @@
                         btn.textContent = "دخول آمن";
                     });
             } else {
+                const companyName = document.getElementById('auth-company').value.trim();
+                const isRepChecked = document.getElementById('auth-is-rep').checked;
+
                 auth.createUserWithEmailAndPassword(email, password)
+                    .then((credential) => {
+                        // حفظ بيانات الشركة والمندوب فوراً في مجموعة مستخدمين مخصصة بـ Firestore
+                        return db.collection('users').doc(credential.user.uid).set({
+                            company: companyName,
+                            isRep: isRepChecked,
+                            email: email
+                        });
+                    })
                     .then(() => {
-                        alert("تم إنشاء حسابك السحابي بنجاح!");
+                        alert("تم إنشاء حسابك وملفك التجاري السحابي بنجاح!");
                         btn.disabled = false;
                     })
                     .catch(err => {
@@ -597,13 +633,27 @@
         auth.onAuthStateChanged((user) => {
             if (user) {
                 currentUser = user;
-                document.getElementById('user-email-display').textContent = user.email;
+                
+                // جلب بيانات ملف الشركة والمندوب وعرضها في الهيدر
+                db.collection('users').doc(user.uid).get().then((doc) => {
+                    let infoHtml = `<strong>${user.email}</strong>`;
+                    if (doc.exists) {
+                        cachedUserProfile = doc.data();
+                        if (cachedUserProfile.company) {
+                            const badge = cachedUserProfile.isRep ? 'مندوب معتمد' : 'شركة/مذخر';
+                            infoHtml += `<br><span style="color: var(--success); font-weight: bold;">💼 ${badge}: ${cachedUserProfile.company}</span>`;
+                        }
+                    }
+                    document.getElementById('user-email-display').innerHTML = infoHtml;
+                }).catch(err => console.log("خطأ جلب بيانات المستخدم:", err));
+
                 authBox.style.display = 'none';
                 appBox.style.display = 'flex';
                 authForm.reset();
                 startListeningForTransactions(); 
             } else {
                 currentUser = null;
+                cachedUserProfile = null;
                 authBox.style.display = 'block';
                 appBox.style.display = 'none';
                 txList.innerHTML = '';
@@ -615,30 +665,46 @@
             return Number(amount).toLocaleString('ar-EG') + ' د.ع';
         }
 
-        // تحديث واجهة الرسوم والوصولات الحية
+        // تحديث واجهة الرسوم والوصولات الحية مع دعم الفلترة برقم الوصل
         function updateUI() {
             let incomeSum = 0;
             let expenseSum = 0;
             txList.innerHTML = '';
 
-            if (transactions.length === 0) {
-                txList.innerHTML = '<p style="text-align:center; font-size:13px; color:#64748b; padding:15px;">لا توجد عمليات مسجلة بحسابك حالياً.</p>';
-                totalBalance.textContent = formatMoney(0);
-                totalIncome.textContent = formatMoney(0);
-                totalExpense.textContent = formatMoney(0);
-                return;
-            }
-
+            // احتساب الإجمالي المالي الكلي دائماً لجميع العمليات بشكل صحيح
             transactions.forEach((tx) => {
                 if(tx.type === 'income') incomeSum += Number(tx.amount);
                 else expenseSum += Number(tx.amount);
+            });
 
+            const queryText = searchReceipt.value.trim();
+            
+            // تصفية المصفوفة محلياً بناءً على رقم الوصل التسلسلي المكتوب
+            const filteredTransactions = transactions.filter(tx => {
+                if (!queryText) return true;
+                return tx.receiptNo && tx.receiptNo.toString().includes(queryText);
+            });
+
+            if (filteredTransactions.length === 0) {
+                txList.innerHTML = '<p style="text-align:center; font-size:13px; color:#64748b; padding:15px;">لا توجد وصولات مطابقة لرقم البحث.</p>';
+                totalBalance.textContent = formatMoney(incomeSum - expenseSum);
+                totalIncome.textContent = formatMoney(incomeSum);
+                totalExpense.textContent = formatMoney(expenseSum);
+                return;
+            }
+
+            filteredTransactions.forEach((tx) => {
                 const item = document.createElement('div');
                 item.className = `transaction-item ${tx.type}`;
                 item.innerHTML = `
                     <div class="item-main">
                         <div class="item-details">
-                            <h4>${tx.name}</h4>
+                            <h4>
+                                ${tx.name} 
+                                <span style="font-size: 11px; background: #e0f2fe; color: #0369a1; padding: 2px 6px; border-radius: 4px; font-weight: bold;">
+                                    وصل #${tx.receiptNo || 'N/A'}
+                                </span>
+                            </h4>
                             <p>${tx.desc}</p>
                         </div>
                         <div class="item-amount">${tx.type === 'income' ? '+' : '-' } ${Number(tx.amount).toLocaleString('ar-EG')} د.ع</div>
@@ -660,7 +726,10 @@
             totalExpense.textContent = formatMoney(expenseSum);
         }
 
-        // جلب البيانات الفوري والفرز المحلي للتخلص من مشاكل حظر الفهرسة السحابية
+        // الاستماع لمدخلات خانة البحث وتحديث الواجهة فورياً
+        searchReceipt.addEventListener('input', updateUI);
+
+        // جلب البيانات الفوري والفرز المحلي السريع لحل مشاكل حظر الفهرسة السحابية
         function startListeningForTransactions() {
             if (!currentUser) return;
             
@@ -672,7 +741,7 @@
                         transactions.push({ id: doc.id, ...doc.data() });
                     });
                     
-                    // فرز آمن محلي وسريع من الأحدث للأقدم
+                    // فرز آمن محلي من الأحدث للأقدم
                     transactions.sort((a, b) => {
                         const timeA = a.createdAt && typeof a.createdAt.toMillis === 'function' ? a.createdAt.toMillis() : 0;
                         const timeB = b.createdAt && typeof b.createdAt.toMillis === 'function' ? b.createdAt.toMillis() : 0;
@@ -682,11 +751,10 @@
                     updateUI();
                 }, (error) => {
                     console.error("خطأ جلب البيانات السحابية: ", error);
-                    alert("خطأ أثناء جلب البيانات: " + error.message);
                 });
         }
 
-        // إضافة عملية جديدة وحفظها سحابياً
+        // إضافة عملية جديدة وتوليد رقم تسلسلي عشوائي فريد وحفظها سحابياً
         form.addEventListener('submit', (e) => {
             e.preventDefault();
             if (!currentUser) return;
@@ -696,6 +764,9 @@
             const desc = document.getElementById('tx-desc').value;
             const amount = document.getElementById('tx-amount').value;
             
+            // توليد رقم تسلسلي عشوائي نظيف مكون من 6 أرقام للوصل المالي الجديد
+            const generatedReceiptNo = Math.floor(100000 + Math.random() * 900000);
+
             const now = new Date();
             const dateStr = now.toLocaleDateString('ar-EG') + ' ' + now.toLocaleTimeString('ar-EG', {hour: '2-digit', minute:'2-digit'});
 
@@ -705,6 +776,7 @@
                 name: name,
                 desc: desc,
                 amount: Number(amount),
+                receiptNo: generatedReceiptNo, // حفظ الرقم التسلسلي في قاعدة البيانات
                 date: dateStr,
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             };
@@ -728,16 +800,14 @@
             }
         }
 
-        // ==================== تعديل محرك الطباعة هنا لحل مشكلة الايفون ====================
+        // محرك الطباعة وعزل وصولات الـ PDF المتوافق تماماً مع متصفحات الآيفون والأندرويد
         function generatePDF(id) {
             const tx = transactions.find(t => t.id === id);
             if(!tx) return;
 
-            // إزالة أي إطار قديم لضمان عدم تراكم العناصر في الذاكرة
             const oldFrame = document.getElementById('print-iframe');
             if(oldFrame) oldFrame.remove();
 
-            // إنشاء إطار (Iframe) معزول ومخفي تماماً لحل مشكلة الطباعة والـ PDF في متصفحات الآيفون
             const iframe = document.createElement('iframe');
             iframe.id = 'print-iframe';
             iframe.style.position = 'fixed';
@@ -748,6 +818,13 @@
             iframe.style.border = 'none';
             document.body.appendChild(iframe);
 
+            // تجهيز بيانات ترويسة المندوب والشركة في الوصل المطبوع إن وجدت
+            let userHeaderHtml = '';
+            if (cachedUserProfile && cachedUserProfile.company) {
+                const label = cachedUserProfile.isRep ? 'المندوب التجاري المعتمد' : 'الجهة الصادرة';
+                userHeaderHtml = `<p style="font-size: 13px; color: #1e3a8a; margin: 4px 0 0 0; font-weight: 600;">${label}: ${cachedUserProfile.company}</p>`;
+            }
+
             const doc = iframe.contentWindow.document;
             doc.open();
             doc.write(`
@@ -755,7 +832,7 @@
                 <html lang="ar" dir="rtl">
                 <head>
                     <meta charset="UTF-8">
-                    <title>وصل مالي</title>
+                    <title>وصل مالي #${tx.receiptNo || ''}</title>
                     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
                     <style>
                         body { font-family: 'Cairo', sans-serif; padding: 20px; background: #fff; color: #000; direction: rtl; }
@@ -766,14 +843,16 @@
                     <div class="receipt-box">
                         <div style="text-align: center; margin-bottom: 20px;">
                             <h2 style="font-size: 20px; margin: 0; font-weight: 700;">المحفظة العراقية الذكية</h2>
-                            <p style="font-size: 11px; color: #555; margin: 5px 0 0 0;">وصل معاملات مالي - نسخة الحساب الآمن</p>
+                            ${userHeaderHtml}
+                            <p style="font-size: 11px; color: #555; margin: 6px 0 0 0;">وصل معاملات مالي - نسخة الحساب الآمن</p>
                         </div>
                         <div style="border-bottom: 1px dashed #000; margin-bottom: 15px;"></div>
                         <table style="width: 100%; font-size: 14px; border-collapse: collapse; line-height: 2;">
-                            <tr><td style="font-weight: bold; width: 35%; padding: 4px 0;">نوع العملية:</td><td>${tx.type === 'income' ? 'قبض وإيراد' : 'صرف ومصروف'}</td></tr>
+                            <tr><td style="font-weight: bold; width: 35%; padding: 4px 0;">رقم الوصل:</td><td style="font-weight: bold; color: #2563eb;">#${tx.receiptNo || 'N/A'}</td></tr>
+                            <tr><td style="font-weight: bold; padding: 4px 0;">نوع العملية:</td><td>${tx.type === 'income' ? 'قبض وإيراد (إدخال)' : 'صرف ومصروف (إخراج)'}</td></tr>
                             <tr><td style="font-weight: bold; padding: 4px 0;">الزبون/الجهة:</td><td>${tx.name}</td></tr>
                             <tr><td style="font-weight: bold; padding: 4px 0;">البيان والوصف:</td><td>${tx.desc}</td></tr>
-                            <tr><td style="font-weight: bold; padding: 4px 0;">التاريخ:</td><td style="font-size: 12px;">${tx.date}</td></tr>
+                            <tr><td style="font-weight: bold; padding: 4px 0;">التاريخ:</td><td style="font-size: 12px; direction: ltr; text-align: right;">${tx.date}</td></tr>
                         </table>
                         <div style="border-bottom: 1px dashed #000; margin: 15px 0;"></div>
                         <div style="background: #f8fafc; padding: 12px; border-radius: 6px; text-align: center; border: 1px solid #e2e8f0;">
@@ -781,7 +860,7 @@
                             <strong style="font-size: 22px; color: #000;">${Number(tx.amount).toLocaleString('ar-EG')} د.ع</strong>
                         </div>
                         <div style="text-align: center; margin-top: 25px; font-size: 10px; color: #64748b;">
-                            شكراً لتعاملكم معنا <br> تم حفظه سحابياً بأمان لحسابك
+                            شكراً لتعاملكم معنا <br> تم حفظ وتوثيق المعاملة سحابياً
                         </div>
                     </div>
                 </body>
@@ -789,7 +868,7 @@
             `);
             doc.close();
 
-            // استدعاء نافذة الطباعة التفاعلية الأصلية للايفون لإنشاء PDF فوري
+            // استدعاء نافذة الطباعة التفاعلية للنظام لإنتاج الـ PDF الفوري بسلاسة كاملة
             setTimeout(() => {
                 iframe.contentWindow.focus();
                 iframe.contentWindow.print();
