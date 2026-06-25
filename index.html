@@ -50,7 +50,7 @@
 
         /* ==================== بنر تثبيت التطبيق على الشاشة ==================== */
         .install-prompt {
-            display: none; /* يتم التحكم به عبر الجافاسكريبت */
+            display: none; 
             background: #1e3a8a;
             color: white;
             padding: 12px 15px;
@@ -390,7 +390,7 @@
 
     <!-- بنر إرشادات التثبيت الذكي على الشاشة الرئيسية -->
     <div class="install-prompt" id="install-box">
-        <div class="install-text" id="install-text-msg">جاري فحص الجهاز...</div>
+        <div class="install-text" id="install-text-msg">جاري فحص معلومات الجهاز...</div>
         <button class="btn-close-prompt" onclick="closeInstallPrompt()">إغلاق</button>
     </div>
 
@@ -483,11 +483,13 @@
     <!-- حاوية الطباعة والـ PDF -->
     <div id="print-section"></div>
 
+    <!-- مكتبات Firebase الأصلية والمتوافقة -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
     <script>
+        // إعدادات قاعدة البيانات الخاصة بك
         const firebaseConfig = {
             apiKey: "AIzaSyAkBFEtRQBub11C7rgbKXqoYses2j7e2Bo",
             authDomain: "iraqi-wallet-9b533.firebaseapp.com",
@@ -498,6 +500,7 @@
             measurementId: "G-PY46CC9K17"
         };
 
+        // تهيئة فايربيس
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
         const auth = firebase.auth();
@@ -507,6 +510,7 @@
         let isLoginMode = true; 
         let unsubscribeSnapshot = null; 
 
+        // ربط عناصر واجهة المستخدم
         const authBox = document.getElementById('auth-box');
         const appBox = document.getElementById('app-box');
         const authForm = document.getElementById('auth-form');
@@ -516,21 +520,22 @@
         const totalExpense = document.getElementById('total-expense');
         const txList = document.getElementById('tx-list');
 
-        // نِظام فحص التثبيت والـ PWA على الشاشة
+        // ==================== نظام فحص وتثبيت التطبيق الحقيقي الحركي ====================
         function checkAppInstallation() {
             const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+            const installBox = document.getElementById('install-box');
+            const msg = document.getElementById('install-text-msg');
             
             if (!isStandalone) {
                 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-                const installBox = document.getElementById('install-box');
-                const msg = document.getElementById('install-text-msg');
-                
                 if (isIOS) {
-                    msg.innerHTML = "📲 <strong>لتثبيت المحفظة كأنها تطبيق على الآيفون:</strong> اضغط على زر <strong>المشاركة (Share)</strong> أسفل المتصفح ثم اختر <strong>إضافة إلى الشاشة الرئيسية (Add to Home Screen)</strong>.";
+                    msg.innerHTML = "📲 <strong>لتثبيت المحفظة كتطبيق مستقل على الآيفون:</strong> اضغط على زر <strong>المشاركة (Share)</strong> أسفل سفاري ثم اختر <strong>إضافة إلى الشاشة الرئيسية (Add to Home Screen)</strong>.";
                 } else {
-                    msg.innerHTML = "📲 <strong>لتثبيت المحفظة على شاشة هاتفك:</strong> اضغط على خيارات المتصفح (النقاط الثلاثة العلوية) ثم اختر <strong>تثبيت التطبيق</strong> أو <strong>إضافة للشاشة الرئيسية</strong>.";
+                    msg.innerHTML = "📲 <strong>لتثبيت المحفظة على شاشة الأندرويد:</strong> اضغط على خيارات المتصفح (النقاط الثلاثة العلوية) ثم اختر <strong>تثبيت التطبيق</strong> أو <strong>إضافة للشاشة الرئيسية</strong>.";
                 }
                 installBox.style.display = 'flex';
+            } else {
+                installBox.style.display = 'none';
             }
         }
 
@@ -538,8 +543,10 @@
             document.getElementById('install-box').style.display = 'none';
         }
 
+        // تشغيل نظام فحص التثبيت فوراً عند تحميل الصفحة الأساسي
         window.addEventListener('DOMContentLoaded', checkAppInstallation);
 
+        // التبديل بين واجهة الدخول وإنشاء حساب جديد
         function toggleAuthMode() {
             isLoginMode = !isLoginMode;
             const title = document.getElementById('auth-title');
@@ -555,23 +562,40 @@
             } else {
                 title.textContent = "إنشاء حساب جديد مالي";
                 desc.textContent = "قم بإنشاء حسابك المستقل لتتمكن من عزل وإدارة وصولاتك بخصوصية تامة";
-                btn.textContent = "تسجيل الحساب";
+                btn.textContent = "تسجيل الحساب الجديد";
                 toggleText.innerHTML = 'لديك حساب بالفعل؟ <span onclick="toggleAuthMode()">سجل دخولك الآن</span>';
             }
         }
 
+        // معالجة إرسال نموذج التحقق والدخول
         authForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const email = document.getElementById('auth-email').value;
             const password = document.getElementById('auth-password').value;
+            const btn = document.getElementById('btn-auth-submit');
+            
+            btn.disabled = true;
+            btn.textContent = isLoginMode ? "جاري الدخول آمن..." : "جاري إنشاء الحساب...";
 
             if (isLoginMode) {
                 auth.signInWithEmailAndPassword(email, password)
-                    .catch(err => alert("خطأ في تسجيل الدخول: " + err.message));
+                    .then(() => { btn.disabled = false; })
+                    .catch(err => {
+                        alert("خطأ في تسجيل الدخول: " + err.message);
+                        btn.disabled = false;
+                        btn.textContent = "دخول آمن";
+                    });
             } else {
                 auth.createUserWithEmailAndPassword(email, password)
-                    .then(() => alert("تم إنشاء حسابك السحابي بنجاح!"))
-                    .catch(err => alert("خطأ في إنشاء الحساب: " + err.message));
+                    .then(() => {
+                        alert("تم إنشاء حسابك السحابي بنجاح!");
+                        btn.disabled = false;
+                    })
+                    .catch(err => {
+                        alert("خطأ في إنشاء الحساب: " + err.message);
+                        btn.disabled = false;
+                        btn.textContent = "تسجيل الحساب الجديد";
+                    });
             }
         });
 
@@ -582,6 +606,7 @@
             }
         }
 
+        // مراقبة حالة المستخدم الحالية (متصل / غير متصل)
         auth.onAuthStateChanged((user) => {
             if (user) {
                 currentUser = user;
@@ -595,6 +620,7 @@
                 authBox.style.display = 'block';
                 appBox.style.display = 'none';
                 txList.innerHTML = '';
+                if (unsubscribeSnapshot) unsubscribeSnapshot();
             }
         });
 
@@ -602,6 +628,7 @@
             return Number(amount).toLocaleString('ar-EG') + ' د.ع';
         }
 
+        // تحديث واجهة الرسوم والوصولات الحية
         function updateUI() {
             let incomeSum = 0;
             let expenseSum = 0;
@@ -646,11 +673,10 @@
             totalExpense.textContent = formatMoney(expenseSum);
         }
 
-        // ==================== التعديل الجوهري هنا لحل مشكلة جاري التحميل ====================
+        // جلب البيانات الفوري والفرز المحلي للتخلص من مشاكل حظر الفهرسة السحابية
         function startListeningForTransactions() {
             if (!currentUser) return;
             
-            // قمنا بإزالة السيرفر رانك .orderBy لتفادي مشكلة حظر الفهرسة من السيرفر
             unsubscribeSnapshot = db.collection('transactions')
                 .where('userId', '==', currentUser.uid)
                 .onSnapshot((snapshot) => {
@@ -659,7 +685,97 @@
                         transactions.push({ id: doc.id, ...doc.data() });
                     });
                     
-                    // ترتيب العمليات محلياً من الأحدث للأقدم بواسطة الجافا سكريبت بشكل آمن ومضمون
+                    // فرز آمن محلي وسريع بنسبة 100% من الأحدث للأقدم
                     transactions.sort((a, b) => {
-                        const timeA = a.createdAt && typeof a.createdAt.toMillis === 'function' ? a.createdAt.toMillis() : Date.now();
-                        const timeB = b.createdAt && typeof b.createdAt.toMillis === 'function' ? b.createdAt.toMillis()Normally I can help with things like this, but I don't seem to have access to that content. You can try again or ask me for something else.
+                        const timeA = a.createdAt && typeof a.createdAt.toMillis === 'function' ? a.createdAt.toMillis() : 0;
+                        const timeB = b.createdAt && typeof b.createdAt.toMillis === 'function' ? b.createdAt.toMillis() : 0;
+                        return timeB - timeA;
+                    });
+                    
+                    updateUI();
+                }, (error) => {
+                    console.error("خطأ جلب البيانات السحابية: ", error);
+                    alert("خطأ أثناء جلب البيانات: " + error.message);
+                });
+        }
+
+        // إضافة عملية جديدة وحفظها سحابياً
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            if (!currentUser) return;
+            
+            const type = document.querySelector('input[name="tx-type"]:checked').value;
+            const name = document.getElementById('tx-name').value;
+            const desc = document.getElementById('tx-desc').value;
+            const amount = document.getElementById('tx-amount').value;
+            
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('ar-EG') + ' ' + now.toLocaleTimeString('ar-EG', {hour: '2-digit', minute:'2-digit'});
+
+            const newTx = {
+                userId: currentUser.uid, 
+                type: type,
+                name: name,
+                desc: desc,
+                amount: Number(amount),
+                date: dateStr,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+
+            db.collection('transactions').add(newTx)
+                .then(() => {
+                    form.reset();
+                    document.getElementById('type-income').checked = true;
+                })
+                .catch((error) => {
+                    alert('خطأ في حفظ العملية: ' + error.message);
+                });
+        });
+
+        function deleteTx(id) {
+            if(confirm('هل أنت متأكد من حذف هذا الوصل من حسابك نهائياً؟')) {
+                db.collection('transactions').doc(id).delete()
+                    .catch((error) => {
+                        alert('حدث خطأ أثناء محاولة الحذف: ' + error.message);
+                    });
+            }
+        }
+
+        // محرك الطباعة وعزل وصولات الـ PDF بشكل متوافق تماماً مع الجوالات والحاسبة
+        function generatePDF(id) {
+            const tx = transactions.find(t => t.id === id);
+            if(!tx) return;
+
+            const printSection = document.getElementById('print-section');
+            printSection.innerHTML = `
+                <div style="direction: rtl; font-family: 'Cairo', sans-serif; padding: 20px; max-width: 400px; margin: 0 auto; color: #000; background: #fff; border: 1px dashed #000; border-radius: 8px;">
+                    <div style="text-align: center; margin-bottom: 20px;">
+                        <h2 style="font-size: 20px; margin: 0; font-weight: 700;">المحفظة العراقية الذكية</h2>
+                        <p style="font-size: 11px; color: #555; margin: 5px 0 0 0;">وصل معاملات مالي - نسخة الحساب الآمن</p>
+                    </div>
+                    <div style="border-bottom: 1px dashed #000; margin-bottom: 15px;"></div>
+                    <table style="width: 100%; font-size: 14px; border-collapse: collapse; line-height: 2;">
+                        <tr><td style="font-weight: bold; width: 35%; padding: 4px 0;">نوع العملية:</td><td>${tx.type === 'income' ? 'قبض وإيراد' : 'صرف ومصروف'}</td></tr>
+                        <tr><td style="font-weight: bold; padding: 4px 0;">الزبون/الجهة:</td><td>${tx.name}</td></tr>
+                        <tr><td style="font-weight: bold; padding: 4px 0;">البيان والوصف:</td><td>${tx.desc}</td></tr>
+                        <tr><td style="font-weight: bold; padding: 4px 0;">التاريخ:</td><td style="font-size: 12px;">${tx.date}</td></tr>
+                    </table>
+                    <div style="border-bottom: 1px dashed #000; margin: 15px 0;"></div>
+                    <div style="background: #f8fafc; padding: 12px; border-radius: 6px; text-align: center; border: 1px solid #e2e8f0;">
+                        <span style="font-size: 13px; color: #475569; display: block; margin-bottom: 4px;">المبلغ الإجمالي</span>
+                        <strong style="font-size: 22px; color: #000;">${Number(tx.amount).toLocaleString('ar-EG')} د.ع</strong>
+                    </div>
+                    <div style="text-align: center; margin-top: 25px; font-size: 10px; color: #64748b;">
+                        شكراً لتعاملكم معنا <br> تم حفظه سحابياً بأمان لحسابك
+                    </div>
+                </div>
+            `;
+            
+            // مهلة زمنية صغيرة لضمان معالجة عناصر الـ CSS بشكل صحيح داخل الموبايل قبل الطباعة
+            setTimeout(() => {
+                window.print();
+            }, 400);
+        }
+    </script>
+</body>
+</html>
