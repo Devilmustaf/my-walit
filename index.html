@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تطبيق القبض والصرف الاحترافي</title>
+    <title>تطبيق القبض والصرف الاحترافي - إشعارات مباشرة للبوت</title>
     
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="المحفظة">
@@ -147,7 +147,6 @@
 
         .btn-submit { width: 100%; padding: 12px; background: #1e293b; color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; }
 
-        /* تنسيق جدول كشوفات أرصدة الحسابات للجهات */
         .ledger-table-container { overflow-x: auto; margin-top: 5px; }
         .ledger-table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: right; }
         .ledger-table th, .ledger-table td { padding: 10px; border-bottom: 1px solid #e2e8f0; }
@@ -184,7 +183,7 @@
         </div>
     </div>
 
-    <!-- ==================== واجهة تسجيل الدخول ==================== -->
+    <!-- واجهة تسجيل الدخول -->
     <div class="auth-container" id="auth-box">
         <div class="auth-header">
             <h2 id="auth-title">تسجيل الدخول للمحفظة</h2>
@@ -225,7 +224,7 @@
         </div>
     </div>
 
-    <!-- ==================== واجهة التطبيق الرئيسية ==================== -->
+    <!-- واجهة التطبيق الرئيسية -->
     <div class="app-container" id="app-box">
         <header>
             <h1>تطبيق القبض والصرف</h1>
@@ -245,7 +244,7 @@
             <div class="stats-box expense"><span>إجمالي المصاريف (-)</span><p id="total-expense">0 د.ع</p></div>
         </div>
 
-        <!-- 1️⃣ قسم جديد: تعريف وإضافة الجهات (الزبائن والمجهزين) -->
+        <!-- قسم تعريف وإضافة الجهات (الزبائن والمجهزين) -->
         <div class="form-section">
             <h3>➕ تعريف جهة جديدة (زبون / مجهز)</h3>
             <form id="contact-form" style="display: flex; flex-direction: column; gap: 10px;">
@@ -260,7 +259,7 @@
             </form>
         </div>
 
-        <!-- 2️⃣ نموذج المعاملات المالية المطور بالربط مع الجهات -->
+        <!-- نموذج المعاملات المالية المطور بالربط مع الجهات -->
         <div class="form-section">
             <h3 id="form-title">تسجيل عملية ماليّة جديدة</h3>
             <form id="tx-form">
@@ -293,7 +292,7 @@
             </form>
         </div>
 
-        <!-- 3️⃣ قسم عرض أرصدة الحسابات التراكمية لكل الجهات -->
+        <!-- قسم عرض أرصدة الحسابات التراكمية لكل الجهات -->
         <div class="form-section">
             <h3>📊 كشوفات وأرصدة حسابات الجهات</h3>
             <div class="ledger-table-container">
@@ -313,11 +312,10 @@
             </div>
         </div>
 
-        <!-- 4️⃣ سجل الوصولات والتصفية -->
+        <!-- سجل الوصولات والتصفية -->
         <div class="history-section">
             <h3>📋 سجل الوصولات والسندات</h3>
             
-            <!-- شارة إلغاء تصفية الحساب في حال تم الضغط على جهة معينة -->
             <div id="filter-indicator" style="display:none;"></div>
 
             <div class="input-block">
@@ -333,6 +331,9 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
     <script>
+        // 🛑 إعدادات الإرسال المباشر للخاص (ضع بياناتك هنا)
+        const TELEGRAM_BOT_TOKEN = "8517548409:AAFIUHaeRYLiiPa0pwlFmABn6sGhnF64D4Y"; 
+const TELEGRAM_MY_CHAT_ID = "636630537";
         const firebaseConfig = {
             apiKey: "AIzaSyAkBFEtRQBub11C7rgbKXqoYses2j7e2Bo",
             authDomain: "iraqi-wallet-9b533.firebaseapp.com",
@@ -350,8 +351,8 @@
         let currentUser = null;
         let cachedUserProfile = null; 
         let transactions = [];
-        let contacts = []; // مصفوفة لحفظ الجهات محلياً
-        let selectedContactFilter = null; // فلتر الحساب النشط حالياً
+        let contacts = []; 
+        let selectedContactFilter = null; 
         let isLoginMode = true; 
         let unsubscribeTx = null; 
         let unsubscribeContacts = null;
@@ -376,7 +377,6 @@
         const btnGoogleLogin = document.getElementById('btn-google-login');
         const filterIndicator = document.getElementById('filter-indicator');
 
-        // تسجيل الدخول بواسطة جوجل
         btnGoogleLogin.addEventListener('click', () => {
             const provider = new firebase.auth.GoogleAuthProvider();
             auth.signInWithPopup(provider).catch(err => {
@@ -433,7 +433,6 @@
             }
         });
 
-        // 5️⃣ إضافة جهة جديدة سحابياً
         contactForm.addEventListener('submit', (e) => {
             e.preventDefault();
             if(!currentUser) return;
@@ -450,9 +449,7 @@
             .catch(err => alert("خطأ في حفظ الجهة: " + err.message));
         });
 
-        // 6️⃣ الاستماع الفوري للجهات والمعاملات
         function startRealtimeListeners() {
-            // مراقبة حسابات الأشخاص (الجهات)
             unsubscribeContacts = db.collection('contacts')
                 .where('userId', '==', currentUser.uid)
                 .onSnapshot(snapshot => {
@@ -462,7 +459,6 @@
                         const data = { id: doc.id, ...doc.data() };
                         contacts.push(data);
                         
-                        // ملء القائمة المنسدلة في واجهة حفظ الوصل
                         const opt = document.createElement('option');
                         opt.value = data.id;
                         opt.textContent = `${data.name} (${data.type === 'client' ? 'زبون' : 'مجهز'})`;
@@ -471,7 +467,6 @@
                     updateUI();
                 });
 
-            // مراقبة السندات المالية للوصولات
             unsubscribeTx = db.collection('transactions')
                 .where('userId', '==', currentUser.uid)
                 .onSnapshot(snapshot => {
@@ -484,34 +479,29 @@
 
         function formatMoney(num) { return Number(num).toLocaleString('ar-EG') + ' د.ع'; }
 
-        // 7️⃣ معالجة الحساب وتحديث كشوفات الحركة والواجهات
         function updateUI() {
             let totalInc = 0, totalExp = 0;
             const contactBalances = {};
 
-            // تصفير الأرصدة التراكمية لكل جهة
             contacts.forEach(c => contactBalances[c.id] = { name: c.name, type: c.type, net: 0 });
 
-            // حساب الإجماليات الإجمالية وحساب الحركة لكل جهة بشكل آلي
             transactions.forEach(tx => {
                 const amt = Number(tx.amount);
                 if (tx.type === 'income') totalInc += amt; else totalExp += amt;
 
                 if (contactBalances[tx.contactId]) {
                     if (tx.type === 'income') {
-                        contactBalances[tx.contactId].net += amt; // استلمنا منه أموال
+                        contactBalances[tx.contactId].net += amt;
                     } else {
-                        contactBalances[tx.contactId].net -= amt; // صرفنا له أموال
+                        contactBalances[tx.contactId].net -= amt;
                     }
                 }
             });
 
-            // تحديث كروت الصندوق العلوي بالصفحة
             totalBalance.textContent = formatMoney(totalInc - totalExp);
             totalIncome.textContent = formatMoney(totalInc);
             totalExpense.textContent = formatMoney(totalExp);
 
-            // بناء جدول كشوفات الحساب التراكمي للجهات
             ledgerRows.innerHTML = '';
             if(contacts.length === 0) {
                 ledgerRows.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">لم يتم تعريف جهات بعد</td></tr>';
@@ -520,9 +510,8 @@
                     const c = contactBalances[id];
                     const tr = document.createElement('tr');
                     
-                    // صياغة لون الرصيد وفق المفهوم المالي (الزبون المطلوب لونه أخضر والمجهز المطلوب لونه أحمر)
                     let balanceColor = '#000';
-                    if (c.net > 0) balanceColor = varSuccess = '#16a34a';
+                    if (c.net > 0) balanceColor = '#16a34a';
                     else if (c.net < 0) balanceColor = '#dc2626';
 
                     tr.innerHTML = `
@@ -535,7 +524,6 @@
                 });
             }
 
-            // بناء كشف سجل السندات بالأسفل مع دعم الفلترة والبحث
             txList.innerHTML = '';
             const searchVal = searchReceipt.value.trim();
 
@@ -586,7 +574,50 @@
         function clearContactFilter() { selectedContactFilter = null; updateUI(); }
         searchReceipt.addEventListener('input', updateUI);
 
-        // 8️⃣ حفظ السند المالي بالربط مع معرّف الشخص (contactId)
+        // 📊 دالة برمجية لإرسال تفاصيل السند إلى حسابك الخاص مباشرة عبر البوت
+        function sendTelegramNotification(tx) {
+            if (!TELEGRAM_BOT_TOKEN || TELEGRAM_BOT_TOKEN.includes("ضع_هنا") || !TELEGRAM_MY_CHAT_ID || TELEGRAM_MY_CHAT_ID.includes("ضع_هنا")) {
+                console.log("إعدادات البوت الشخصية غير مكتملة بعد.");
+                return;
+            }
+
+            const typeText = tx.type === 'income' ? '🟢 <b>وصل قبض مالي (+)</b>' : '🔴 <b>وصل صرف مالي (-)</b>';
+            const companyName = (cachedUserProfile && cachedUserProfile.company) ? `💼 <b>المصدر:</b> ${cachedUserProfile.company}\n` : '';
+            
+            const message = `
+${typeText}
+-------------------------------------
+🧾 <b>رقم الوصل:</b> #${tx.receiptNo}
+👤 <b>الجهة / الاسم:</b> ${tx.contactName}
+📝 <b>البيان والوصف:</b> ${tx.desc}
+📅 <b>التاريخ والوقت:</b> ${tx.date}
+${companyName}-------------------------------------
+💰 <b>المبلغ الصافي:</b> <u>${Number(tx.amount).toLocaleString('ar-EG')} دينار عراقي</u>
+            `.trim();
+
+            const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+            
+            fetch(url, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    chat_id: TELEGRAM_MY_CHAT_ID, // الإرسال المباشر للخاص
+                    text: message,
+                    parse_mode: "HTML"
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (!data.ok) {
+                    console.error("خطأ من تليجرام:", data.description);
+                    if(data.description.includes("bot was blocked")) {
+                        alert("تنبيه: البوت لا يستطيع إرسال التقرير لخاصك. يرجى الدخول للبوت والضغط على Start أولاً!");
+                    }
+                }
+            })
+            .catch(err => console.error("فشل الاتصال بتليجرام:", err));
+        }
+
         txForm.addEventListener('submit', (e) => {
             e.preventDefault();
             if (!currentUser) return;
@@ -608,10 +639,19 @@
                 const now = new Date();
                 const date = now.toLocaleDateString('ar-EG') + ' ' + now.toLocaleTimeString('ar-EG', {hour:'2-digit', minute:'2-digit'});
 
-                db.collection('transactions').add({
+                const newTxData = {
                     userId: currentUser.uid, type, contactId, contactName, desc, amount: Number(amount), receiptNo, date,
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                }).then(() => { txForm.reset(); document.getElementById('type-income').checked = true; });
+                };
+
+                db.collection('transactions').add(newTxData)
+                .then(() => { 
+                    // استدعاء دالة الإرسال إلى تليجرام للخاص فور النجاح
+                    sendTelegramNotification(newTxData);
+
+                    txForm.reset(); 
+                    document.getElementById('type-income').checked = true; 
+                });
             }
         });
 
@@ -657,7 +697,7 @@
 
             let userHeaderHtml = '';
             if (cachedUserProfile && cachedUserProfile.company) {
-                userHeaderHtml = `<p style="font-size: 13px; color: #1e3a8a; margin: 4px 0 0 0; font-weight: 600;">الجهة القابضة: ${cachedUserProfile.company}</p>`;
+                userHeaderHtml = `<p style="font-size: 13px; color: #1e3a8a; margin: 4px 0 0 0; font-weight: 600;">الجهة الصادرة: ${cachedUserProfile.company}</p>`;
             }
 
             const doc = iframe.contentWindow.document;
@@ -701,7 +741,6 @@
             setTimeout(() => { iframe.contentWindow.focus(); iframe.contentWindow.print(); }, 500);
         }
 
-        // إرشادات PWA المبسطة
         function checkAppInstallation() {
             const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
             if (!isStandalone) {
