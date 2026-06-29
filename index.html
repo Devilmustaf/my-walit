@@ -5,13 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>تطبيق القبض والصرف</title>
     
-    <!-- وسم لجعل التطبيق يفتح كـ تطبيق كامل بدون شريط المتصفح (للآيفون والأندرويد) -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="المحفظة">
     <meta name="apple-mobile-web-app-status-bar-style" content="#1e3a8a">
     <meta name="mobile-web-app-capable" content="yes">
 
-    <!-- أيقونة التطبيق الفخمة والمرتبة عند التنصيب على شاشة الهاتف -->
     <link rel="apple-touch-icon" href="https://img.icons8.com/fluent/512/wallet.png">
     <link rel="icon" type="image/png" href="https://img.icons8.com/fluent/512/wallet.png">
 
@@ -48,26 +46,26 @@
             min-height: 100vh;
         }
 
-        /* ==================== بنر تثبيت التطبيق على الشاشة ==================== */
+        /* ==================== بنر تثبيت التطبيق الذكي في أعلى الشاشة ==================== */
         .install-prompt {
             display: none; 
             background: #1e3a8a;
             color: white;
-            padding: 12px 15px;
+            padding: 14px 15px;
             position: fixed;
-            bottom: 20px;
+            top: 20px; /* تم نقلها للأعلى لتظهر مباشرة عند الدخول للرابط */
             left: 50%;
             transform: translateX(-50%);
             width: 92%;
             max-width: 420px;
             border-radius: 14px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
             z-index: 99999;
             justify-content: space-between;
             align-items: center;
-            font-size: 12.5px;
+            font-size: 13px;
             line-height: 1.6;
-            border: 1px solid rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.15);
         }
 
         .install-text {
@@ -79,11 +77,12 @@
             background: rgba(255,255,255,0.2);
             color: white;
             border: none;
-            padding: 4px 10px;
+            padding: 5px 12px;
             border-radius: 6px;
             cursor: pointer;
             font-size: 11px;
             font-weight: 600;
+            white-space: nowrap;
         }
 
         /* ==================== واجهة تسجيل الدخول ==================== */
@@ -95,7 +94,7 @@
             padding: 30px 25px;
             box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05);
             border: 1px solid #e2e8f0;
-            margin-top: 40px;
+            margin-top: 60px;
             display: block;
         }
 
@@ -135,6 +134,7 @@
             display: none; 
             flex-direction: column;
             gap: 20px;
+            margin-top: 40px;
         }
 
         header {
@@ -195,7 +195,7 @@
             gap: 12px;
         }
 
-        .stat-box {
+        .stats-box {
             background: var(--surface);
             padding: 15px;
             border-radius: 12px;
@@ -204,16 +204,16 @@
             border: 1px solid #e2e8f0;
         }
 
-        .stat-box span {
+        .stats-box span {
             font-size: 12px;
             display: block;
             margin-bottom: 5px;
         }
 
-        .stat-box.income span { color: var(--success); }
-        .stat-box.expense span { color: var(--danger); }
+        .stats-box.income span { color: var(--success); }
+        .stats-box.expense span { color: var(--danger); }
 
-        .stat-box p {
+        .stats-box p {
             font-size: 16px;
             font-weight: 600;
         }
@@ -307,6 +307,7 @@
             font-size: 15px;
             font-weight: 600;
             cursor: pointer;
+            transition: background 0.2s;
         }
 
         .btn-submit:hover { background: #0f172a; }
@@ -375,18 +376,20 @@
         }
 
         .btn-pdf { color: var(--primary); font-weight: 600; }
+        .btn-edit { color: #d97706; font-weight: 600; } /* لون ذهبي مميز للتعديل */
         .btn-delete { color: var(--danger); }
     </style>
 </head>
 <body>
 
-    <!-- بنر إرشادات التثبيت الذكي على الشاشة الرئيسية -->
     <div class="install-prompt" id="install-box">
-        <div class="install-text" id="install-text-msg">جاري فحص معلومات الجهاز...</div>
-        <button class="btn-close-prompt" onclick="closeInstallPrompt()">إغلاق</button>
+        <div class="install-text" id="install-text-msg">جاري فحص معلومات الجهاز للتثبيت...</div>
+        <div style="display: flex; align-items: center; gap: 5px;">
+            <button class="btn-close-prompt" id="btn-pwa-install" style="display:none; background: var(--success);">تثبيت الآن</button>
+            <button class="btn-close-prompt" onclick="closeInstallPrompt()">إغلاق</button>
+        </div>
     </div>
 
-    <!-- ==================== واجهة تسجيل الدخول وإنشاء الحساب ==================== -->
     <div class="auth-container" id="auth-box">
         <div class="auth-header">
             <h2 id="auth-title">تسجيل الدخول للمحفظة</h2>
@@ -402,7 +405,6 @@
                 <input type="password" id="auth-password" placeholder="••••••••" minlength="6" required>
             </div>
             
-            <!-- الحقول الجديدة الخاصة بالشركة والمندوب عند إنشاء الحساب -->
             <div id="signup-extra-fields" style="display: none; border-top: 1px dashed #e2e8f0; padding-top: 15px; margin-top: 15px;">
                 <div class="input-block">
                     <label>اسم الشركة / المذخر التجاري</label>
@@ -421,7 +423,6 @@
         </div>
     </div>
 
-    <!-- ==================== واجهة التطبيق الرئيسية ==================== -->
     <div class="app-container" id="app-box">
         <header>
             <div>
@@ -439,18 +440,18 @@
         </div>
 
         <div class="stats-grid">
-            <div class="stat-box income">
+            <div class="stats-box income">
                 <span>إجمالي قبوضاتك (+)</span>
                 <p id="total-income">0 د.ع</p>
             </div>
-            <div class="stat-box expense">
+            <div class="stats-box expense">
                 <span>إجمالي مصاريفك (-)</span>
                 <p id="total-expense">0 د.ع</p>
             </div>
         </div>
 
         <div class="form-section">
-            <h3>تسجيل عملية جديدة في حسابك</h3>
+            <h3 id="form-title">تسجيل عملية جديدة في حسابك</h3>
             <form id="tx-form">
                 <div class="radio-group">
                     <input type="radio" id="type-income" name="tx-type" value="income" checked>
@@ -475,14 +476,14 @@
                     <input type="number" id="tx-amount" placeholder="مثال: 25000" required>
                 </div>
 
-                <button type="submit" class="btn-submit">حفظ في سحابتك الخاصة</button>
+                <button type="submit" class="btn-submit" id="btn-tx-submit">حفظ في سحابتك الخاصة</button>
+                <button type="button" class="btn-submit" id="btn-tx-cancel" style="background: #64748b; margin-top: 8px; display: none;" onclick="cancelEditMode()">إلغاء التعديل والرجوع</button>
             </form>
         </div>
 
         <div class="history-section">
             <h3>سجل وصولاتك الخاصة</h3>
             
-            <!-- حقل البحث الذكي الجديد برقم الوصل التسلسلي -->
             <div class="input-block" style="margin-bottom: 15px;">
                 <input type="text" id="search-receipt" placeholder="🔍 ابحث برقم الوصل التسلسلي المستهدف..." style="padding: 11px; border-radius: 8px; border: 1px solid #cbd5e1; width: 100%; font-size: 13px;">
             </div>
@@ -491,7 +492,6 @@
         </div>
     </div>
 
-    <!-- مكتبات Firebase الأصلية والمتوافقة -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
@@ -514,10 +514,14 @@
         const auth = firebase.auth();
 
         let currentUser = null;
-        let cachedUserProfile = null; // لحفظ بيانات المندوب والشركة محلياً
+        let cachedUserProfile = null; 
         let transactions = [];
         let isLoginMode = true; 
         let unsubscribeSnapshot = null; 
+        let editingTxId = null; // متغير تتبع معرف الوصل الجاري تعديله
+
+        // متغير لتخزين حدث التثبيت التلقائي للنظام
+        let deferredPrompt = null;
 
         // ربط عناصر واجهة المستخدم
         const authBox = document.getElementById('auth-box');
@@ -530,8 +534,11 @@
         const txList = document.getElementById('tx-list');
         const signupExtraFields = document.getElementById('signup-extra-fields');
         const searchReceipt = document.getElementById('search-receipt');
+        const btnTxSubmit = document.getElementById('btn-tx-submit');
+        const btnTxCancel = document.getElementById('btn-tx-cancel');
+        const formTitle = document.getElementById('form-title');
 
-        // ==================== نظام فحص وتثبيت التطبيق الحقيقي الحركي ====================
+        // ==================== نظام فحص وتثبيت التطبيق الفوري الذكي ====================
         function checkAppInstallation() {
             const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
             const installBox = document.getElementById('install-box');
@@ -540,15 +547,39 @@
             if (!isStandalone) {
                 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
                 if (isIOS) {
-                    msg.innerHTML = "📲 <strong>لتثبيت المحفظة كتطبيق مستقل على الآيفون:</strong> اضغط على زر <strong>المشاركة (Share)</strong> أسفل سفاري ثم اختر <strong>إضافة إلى الشاشة الرئيسية (Add to Home Screen)</strong>.";
+                    msg.innerHTML = "📲 <strong>لتثبيت المحفظة على شاشة الآيفون:</strong> اضغط على زر <strong>المشاركة (Share)</strong> أسفل سفاري ثم اختر <strong>إضافة إلى الشاشة الرئيسية (Add to Home Screen)</strong>.";
                 } else {
-                    msg.innerHTML = "📲 <strong>لتثبيت المحفظة على شاشة الأندرويد:</strong> اضغط على خيارات المتصفح (النقاط الثلاثة العلوية) ثم اختر <strong>تثبيت التطبيق</strong> أو <strong>إضافة للشاشة الرئيسية</strong>.";
+                    msg.innerHTML = "📲 <strong>تنبيه تثبيت:</strong> يرجى تثبيت المحفظة على سطح الجوال للوصول السريع والآمن كـ تطبيق مستقل.";
                 }
                 installBox.style.display = 'flex';
             } else {
                 installBox.style.display = 'none';
             }
         }
+
+        // الإمساك بحدث التثبيت الأصلي من متصفحات الأندرويد لجعله فوري وتلقائي بنقرة واحدة
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            
+            const msg = document.getElementById('install-text-msg');
+            const installBtn = document.getElementById('btn-pwa-install');
+            
+            msg.innerHTML = "📲 <strong>هل تريد تثبيت تطبيق المحفظة على شاشة هاتفك الآن؟</strong> بنقرة واحدة سريعة ومستقلة.";
+            installBtn.style.display = 'inline-block';
+            document.getElementById('install-box').style.display = 'flex';
+
+            installBtn.addEventListener('click', () => {
+                installBtn.style.display = 'none';
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('User accepted the install prompt');
+                    }
+                    deferredPrompt = null;
+                });
+            });
+        });
 
         function closeInstallPrompt() {
             document.getElementById('install-box').style.display = 'none';
@@ -603,7 +634,6 @@
 
                 auth.createUserWithEmailAndPassword(email, password)
                     .then((credential) => {
-                        // حفظ بيانات الشركة والمندوب فوراً في مجموعة مستخدمين مخصصة بـ Firestore
                         return db.collection('users').doc(credential.user.uid).set({
                             company: companyName,
                             isRep: isRepChecked,
@@ -634,7 +664,6 @@
             if (user) {
                 currentUser = user;
                 
-                // جلب بيانات ملف الشركة والمندوب وعرضها في الهيدر
                 db.collection('users').doc(user.uid).get().then((doc) => {
                     let infoHtml = `<strong>${user.email}</strong>`;
                     if (doc.exists) {
@@ -665,13 +694,12 @@
             return Number(amount).toLocaleString('ar-EG') + ' د.ع';
         }
 
-        // تحديث واجهة الرسوم والوصولات الحية مع دعم الفلترة برقم الوصل
+        // تحديث واجهة الرسوم والوصولات الحية مع دعم الفلترة برقم الوصل والتعديل
         function updateUI() {
             let incomeSum = 0;
             let expenseSum = 0;
             txList.innerHTML = '';
 
-            // احتساب الإجمالي المالي الكلي دائماً لجميع العمليات بشكل صحيح
             transactions.forEach((tx) => {
                 if(tx.type === 'income') incomeSum += Number(tx.amount);
                 else expenseSum += Number(tx.amount);
@@ -679,7 +707,6 @@
 
             const queryText = searchReceipt.value.trim();
             
-            // تصفية المصفوفة محلياً بناءً على رقم الوصل التسلسلي المكتوب
             const filteredTransactions = transactions.filter(tx => {
                 if (!queryText) return true;
                 return tx.receiptNo && tx.receiptNo.toString().includes(queryText);
@@ -713,6 +740,7 @@
                         <span>${tx.date}</span>
                         <div class="actions">
                             <button class="btn-action btn-pdf" onclick="generatePDF('${tx.id}')">وصل PDF</button>
+                            <button class="btn-action btn-edit" onclick="triggerEditMode('${tx.id}')">تعديل</button>
                             <button class="btn-action btn-delete" onclick="deleteTx('${tx.id}')">حذف</button>
                         </div>
                     </div>
@@ -726,10 +754,9 @@
             totalExpense.textContent = formatMoney(expenseSum);
         }
 
-        // الاستماع لمدخلات خانة البحث وتحديث الواجهة فورياً
         searchReceipt.addEventListener('input', updateUI);
 
-        // جلب البيانات الفوري والفرز المحلي السريع لحل مشاكل حظر الفهرسة السحابية
+        // جلب البيانات الفوري من Firestore والفرز المحلي السريع
         function startListeningForTransactions() {
             if (!currentUser) return;
             
@@ -741,7 +768,6 @@
                         transactions.push({ id: doc.id, ...doc.data() });
                     });
                     
-                    // فرز آمن محلي من الأحدث للأقدم
                     transactions.sort((a, b) => {
                         const timeA = a.createdAt && typeof a.createdAt.toMillis === 'function' ? a.createdAt.toMillis() : 0;
                         const timeB = b.createdAt && typeof b.createdAt.toMillis === 'function' ? b.createdAt.toMillis() : 0;
@@ -754,7 +780,46 @@
                 });
         }
 
-        // إضافة عملية جديدة وتوليد رقم تسلسلي عشوائي فريد وحفظها سحابياً
+        // تشغيل نظام ووضع "التعديل" المالي للوصل المختار
+        function triggerEditMode(id) {
+            const tx = transactions.find(t => t.id === id);
+            if (!tx) return;
+
+            editingTxId = id; // تخزين آيدي المعاملة المستهدفة بالوضع التعديلي
+
+            // تعبئة حقول النموذج بالبيانات الحالية للعملية
+            document.getElementById('tx-name').value = tx.name;
+            document.getElementById('tx-desc').value = tx.desc;
+            document.getElementById('tx-amount').value = tx.amount;
+
+            if (tx.type === 'income') {
+                document.getElementById('type-income').checked = true;
+            } else {
+                document.getElementById('type-expense').checked = true;
+            }
+
+            // تحديث تصميم ونصوص النموذج البرمجي إلى حالة التعديل
+            formTitle.innerHTML = `⚙️ تعديل وتحديث بيانات الوصل <span style="color:var(--primary)">#${tx.receiptNo}</span>`;
+            btnTxSubmit.textContent = "تحديث المعاملة الماليّة";
+            btnTxSubmit.style.background = var(--success);
+            btnTxCancel.style.display = "block"; // إظهار زر إلغاء التعديل
+
+            // صعود حركي سلس جداً لأعلى الصفحة حيث يقع النموذج
+            document.querySelector('.form-section').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // إلغاء وضع التعديل وإعادة تعيين النموذج للوضع الافتراضي
+        function cancelEditMode() {
+            editingTxId = null;
+            form.reset();
+            document.getElementById('type-income').checked = true;
+            formTitle.textContent = "تسجيل عملية جديدة في حسابك";
+            btnTxSubmit.textContent = "حفظ في سحابتك الخاصة";
+            btnTxSubmit.style.background = "#1e293b";
+            btnTxCancel.style.display = "none";
+        }
+
+        // إضافة عملية جديدة أو تحديث معالجة عملية معدلة حالية وحفظها سحابياً
         form.addEventListener('submit', (e) => {
             e.preventDefault();
             if (!currentUser) return;
@@ -763,36 +828,56 @@
             const name = document.getElementById('tx-name').value;
             const desc = document.getElementById('tx-desc').value;
             const amount = document.getElementById('tx-amount').value;
-            
-            // توليد رقم تسلسلي عشوائي نظيف مكون من 6 أرقام للوصل المالي الجديد
-            const generatedReceiptNo = Math.floor(100000 + Math.random() * 900000);
 
-            const now = new Date();
-            const dateStr = now.toLocaleDateString('ar-EG') + ' ' + now.toLocaleTimeString('ar-EG', {hour: '2-digit', minute:'2-digit'});
-
-            const newTx = {
-                userId: currentUser.uid, 
-                type: type,
-                name: name,
-                desc: desc,
-                amount: Number(amount),
-                receiptNo: generatedReceiptNo, // حفظ الرقم التسلسلي في قاعدة البيانات
-                date: dateStr,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            };
-
-            db.collection('transactions').add(newTx)
+            if (editingTxId) {
+                // 🔥 [مسار التعديل]: تحديث الوصل الموجود مسبقاً في Firestore دون تغيير الآيدي أو التاريخ الأصلي أو رقم الوصل
+                db.collection('transactions').doc(editingTxId).update({
+                    type: type,
+                    name: name,
+                    desc: desc,
+                    amount: Number(amount),
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp() // توثيق وقت التعديل فقط
+                })
                 .then(() => {
-                    form.reset();
-                    document.getElementById('type-income').checked = true;
+                    cancelEditMode(); // إنهاء وضع التعديل وتنظيف الحقول
                 })
                 .catch((error) => {
-                    alert('خطأ في حفظ العملية: ' + error.message);
+                    alert('خطأ في تحديث البيانات السحابية: ' + error.message);
                 });
+
+            } else {
+                // 🟢 [مسار الإضافة النظيفة]: توليد رقم تسلسلي عشوائي نظيف فريد مكون من 6 أرقام للوصل المالي الجديد
+                const generatedReceiptNo = Math.floor(100000 + Math.random() * 900000);
+                const now = new Date();
+                const dateStr = now.toLocaleDateString('ar-EG') + ' ' + now.toLocaleTimeString('ar-EG', {hour: '2-digit', minute:'2-digit'});
+
+                const newTx = {
+                    userId: currentUser.uid, 
+                    type: type,
+                    name: name,
+                    desc: desc,
+                    amount: Number(amount),
+                    receiptNo: generatedReceiptNo, 
+                    date: dateStr,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                };
+
+                db.collection('transactions').add(newTx)
+                    .then(() => {
+                        form.reset();
+                        document.getElementById('type-income').checked = true;
+                    })
+                    .catch((error) => {
+                        alert('خطأ في حفظ العملية: ' + error.message);
+                    });
+            }
         });
 
         function deleteTx(id) {
             if(confirm('هل أنت متأكد من حذف هذا الوصل من حسابك نهائياً؟')) {
+                // إذا كان المستخدم يحذف نفس الوصل المفتوح للتعديل حالياً، نغلق وضع التعديل فوراً
+                if (editingTxId === id) cancelEditMode();
+
                 db.collection('transactions').doc(id).delete()
                     .catch((error) => {
                         alert('حدث خطأ أثناء محاولة الحذف: ' + error.message);
@@ -818,7 +903,6 @@
             iframe.style.border = 'none';
             document.body.appendChild(iframe);
 
-            // تجهيز بيانات ترويسة المندوب والشركة في الوصل المطبوع إن وجدت
             let userHeaderHtml = '';
             if (cachedUserProfile && cachedUserProfile.company) {
                 const label = cachedUserProfile.isRep ? 'المندوب التجاري المعتمد' : 'الجهة الصادرة';
@@ -842,7 +926,7 @@
                 <body>
                     <div class="receipt-box">
                         <div style="text-align: center; margin-bottom: 20px;">
-                            <h2 style="font-size: 20px; margin: 0; font-weight: 700;">النضام الذكي للقبض والصرف</h2>
+                            <h2 style="font-size: 20px; margin: 0; font-weight: 700;">النظام الذكي للقبض والصرف</h2>
                             ${userHeaderHtml}
                             <p style="font-size: 11px; color: #555; margin: 6px 0 0 0;">وصل معاملات مالي - نسخة الحساب الآمن</p>
                         </div>
@@ -868,7 +952,6 @@
             `);
             doc.close();
 
-            // استدعاء نافذة الطباعة التفاعلية للنظام لإنتاج الـ PDF الفوري بسلاسة كاملة
             setTimeout(() => {
                 iframe.contentWindow.focus();
                 iframe.contentWindow.print();
