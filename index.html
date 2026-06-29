@@ -504,6 +504,11 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
     <script>
+        // نظام فحص أمان استباقي لمنع تعطل الصفحة إذا حُجبت السحابة أو انقطع الاتصال
+        if (typeof firebase === 'undefined') {
+            alert("⚠️ تنبيه أمني: فشل تحميل مكتبات فايربيس السحابية! يرجى التحقق من جودة اتصالك بالإنترنت، أو إلغاء حظر حزم الـ CDN في متصفحك ثم تحديث الصفحة.");
+        }
+
         // إعدادات قاعدة البيانات الخاصة بك
         const firebaseConfig = {
             apiKey: "AIzaSyAkBFEtRQBub11C7rgbKXqoYses2j7e2Bo",
@@ -589,7 +594,12 @@
             document.getElementById('install-box').style.display = 'none';
         }
 
-        window.addEventListener('DOMContentLoaded', checkAppInstallation);
+        // استدعاء نظام الفحص فور الجاهزية لحماية الواجهة من التعليق
+        if (document.readyState === 'loading') {
+            window.addEventListener('DOMContentLoaded', checkAppInstallation);
+        } else {
+            checkAppInstallation();
+        }
 
         // التبديل بين واجهة الدخول وإنشاء حساب جديد
         function toggleAuthMode() {
@@ -617,7 +627,9 @@
         // معالجة إرسال نموذج التحقق والدخول وإنشاء الحساب التجاري
         authForm.addEventListener('submit', (e) => {
             e.preventDefault();
-            const email = document.getElementById('auth-email').value;
+            
+            // تم إضافة دالة .trim() هنا لتنظيف البريد من المسافات التلقائية المزعجة بالهواتف
+            const email = document.getElementById('auth-email').value.trim();
             const password = document.getElementById('auth-password').value;
             const btn = document.getElementById('btn-auth-submit');
             
@@ -801,7 +813,6 @@
                 document.getElementById('type-expense').checked = true;
             }
 
-            // تحديث تصميم ونصوص النموذج البرمجي إلى حالة التعديل (تم إصلاح الخطأ البرمي هنا بالصيغة النصية القواعدية الصحيحة)
             formTitle.innerHTML = `⚙️ تعديل وتحديث بيانات الوصل <span style="color:var(--primary)">#${tx.receiptNo}</span>`;
             btnTxSubmit.textContent = "تحديث المعاملة الماليّة";
             btnTxSubmit.style.background = "var(--success)"; 
