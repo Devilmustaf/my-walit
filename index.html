@@ -96,7 +96,7 @@
             padding: 30px 25px;
             box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05);
             border: 1px solid #e2e8f0;
-            margin-top: 60px;
+            margin-top: 40px;
             display: block;
         }
 
@@ -127,6 +127,61 @@
             cursor: pointer;
             font-weight: 600;
             text-decoration: underline;
+        }
+
+        /* تصميم زر تسجيل الدخول بواسطة جوجل */
+        .btn-google {
+            width: 100%;
+            padding: 12px;
+            background: #ffffff;
+            color: #1e293b;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .btn-google:hover {
+            background: #f8fafc;
+            border-color: #94a3b8;
+        }
+
+        .btn-google img {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* Divider الفاصل البصري */
+        .auth-divider {
+            text-align: center;
+            margin: 20px 0 10px 0;
+            color: var(--text-muted);
+            font-size: 13px;
+            position: relative;
+        }
+
+        .auth-divider span {
+            background: var(--surface);
+            padding: 0 12px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .auth-divider::before {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            border-top: 1px solid #e2e8f0;
+            z-index: 0;
         }
 
         /* ==================== واجهة التطبيق الرئيسية ==================== */
@@ -399,6 +454,7 @@
             <h2 id="auth-title">تسجيل الدخول للمحفظة</h2>
             <p id="auth-desc">الرجاء إدخال بياناتك لحفظ وإدارة وصولاتك بأمان سحابي</p>
         </div>
+        
         <form id="auth-form">
             <div class="input-block">
                 <label>البريد الإلكتروني</label>
@@ -423,6 +479,17 @@
 
             <button type="submit" class="btn-submit" id="btn-auth-submit" style="background: var(--primary); margin-top: 10px;">دخول آمن</button>
         </form>
+
+        <!-- الفاصل البصري وزر الدخول عبر جوجل المضاف حديثاً -->
+        <div class="auth-divider">
+            <span>أو الدخول السريع</span>
+        </div>
+
+        <button type="button" class="btn-google" id="btn-google-login">
+            <img src="https://img.icons8.com/color/48/google-logo.png" alt="Google">
+            تسجيل الدخول بواسطة حساب Google
+        </button>
+
         <div class="auth-toggle">
             <p id="auth-toggle-text">ليس لديك حساب؟ <span onclick="toggleAuthMode()">إنشاء حساب جديد</span></p>
         </div>
@@ -547,6 +614,37 @@
         const btnTxSubmit = document.getElementById('btn-tx-submit');
         const btnTxCancel = document.getElementById('btn-tx-cancel');
         const formTitle = document.getElementById('form-title');
+        const btnGoogleLogin = document.getElementById('btn-google-login');
+
+        // التقاط نتيجة إعادة التوجيه لـ Google إن وجدت (للتعامل مع آيفون/سفاري بمرونة)
+        auth.getRedirectResult().catch(err => {
+            if (err.code) console.error("Redirect Auth Error:", err);
+        });
+
+        // ==================== برمجة تسجيل الدخول بواسطة Google ====================
+        btnGoogleLogin.addEventListener('click', () => {
+            btnGoogleLogin.disabled = true;
+            btnGoogleLogin.textContent = "جاري الاتصال بـ Google...";
+            
+            const provider = new firebase.auth.GoogleAuthProvider();
+            
+            // محاولة الفتح كنافذة منبثقة أولاً لسهولتها وسرعتها
+            auth.signInWithPopup(provider)
+                .then(() => {
+                    btnGoogleLogin.disabled = false;
+                    btnGoogleLogin.innerHTML = `<img src="https://img.icons8.com/color/48/google-logo.png" alt="Google"> تسجيل الدخول بواسطة حساب Google`;
+                })
+                .catch(err => {
+                    // إذا كان المتصفح يحظر المنبثقات (مثل بعض إعدادات آيفون)، نتحول تلقائياً لطريقة التوجيه الكامل للبريد
+                    if (err.code === 'auth/popup-blocked' || err.code === 'auth/cancelled-popup-request') {
+                        auth.signInWithRedirect(provider);
+                    } else {
+                        alert("خطأ أثناء تسجيل الدخول عبر Google: " + err.message);
+                        btnGoogleLogin.disabled = false;
+                        btnGoogleLogin.innerHTML = `<img src="https://img.icons8.com/color/48/google-logo.png" alt="Google"> تسجيل الدخول بواسطة حساب Google`;
+                    }
+                });
+        });
 
         // ==================== نظام فحص وتثبيت التطبيق الفوري الذكي ====================
         function checkAppInstallation() {
@@ -594,7 +692,6 @@
             document.getElementById('install-box').style.display = 'none';
         }
 
-        // استدعاء نظام الفحص فور الجاهزية لحماية الواجهة من التعليق
         if (document.readyState === 'loading') {
             window.addEventListener('DOMContentLoaded', checkAppInstallation);
         } else {
@@ -624,11 +721,10 @@
             }
         }
 
-        // معالجة إرسال نموذج التحقق والدخول وإنشاء الحساب التجاري
+        // معالجة إرسال نموذج التحقق والدخول وإنشاء الحساب التقليدي بالبريد
         authForm.addEventListener('submit', (e) => {
             e.preventDefault();
             
-            // تم إضافة دالة .trim() هنا لتنظيف البريد من المسافات التلقائية المزعجة بالهواتف
             const email = document.getElementById('auth-email').value.trim();
             const password = document.getElementById('auth-password').value;
             const btn = document.getElementById('btn-auth-submit');
@@ -688,6 +784,9 @@
                             const badge = cachedUserProfile.isRep ? 'مندوب معتمد' : 'شركة/مذخر';
                             infoHtml += `<br><span style="color: var(--success); font-weight: bold;">💼 ${badge}: ${cachedUserProfile.company}</span>`;
                         }
+                    } else {
+                        // تعريف افتراضي إذا دخل المستخدم عبر جوجل لأول مرة ولم يملأ بيانات الشركة بعد
+                        cachedUserProfile = { email: user.email, company: "", isRep: false };
                     }
                     document.getElementById('user-email-display').innerHTML = infoHtml;
                 }).catch(err => console.log("خطأ جلب بيانات المستخدم:", err));
