@@ -5,11 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>تطبيق القبض والصرف</title>
     
+    <!-- وسم لجعل التطبيق يفتح كـ تطبيق كامل بدون شريط المتصفح (للآيفون والأندرويد) -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="المحفظة">
     <meta name="apple-mobile-web-app-status-bar-style" content="#1e3a8a">
     <meta name="mobile-web-app-capable" content="yes">
 
+    <!-- أيقونة التطبيق الفخمة والمرتبة عند التنصيب على شاشة الهاتف -->
     <link rel="apple-touch-icon" href="https://img.icons8.com/fluent/512/wallet.png">
     <link rel="icon" type="image/png" href="https://img.icons8.com/fluent/512/wallet.png">
 
@@ -53,7 +55,7 @@
             color: white;
             padding: 14px 15px;
             position: fixed;
-            top: 20px; /* تم نقلها للأعلى لتظهر مباشرة عند الدخول للرابط */
+            top: 20px; 
             left: 50%;
             transform: translateX(-50%);
             width: 92%;
@@ -376,12 +378,13 @@
         }
 
         .btn-pdf { color: var(--primary); font-weight: 600; }
-        .btn-edit { color: #d97706; font-weight: 600; } /* لون ذهبي مميز للتعديل */
+        .btn-edit { color: #d97706; font-weight: 600; } 
         .btn-delete { color: var(--danger); }
     </style>
 </head>
 <body>
 
+    <!-- بنر إرشادات التثبيت الذكي في أعلى الشاشة الرئيسية -->
     <div class="install-prompt" id="install-box">
         <div class="install-text" id="install-text-msg">جاري فحص معلومات الجهاز للتثبيت...</div>
         <div style="display: flex; align-items: center; gap: 5px;">
@@ -390,6 +393,7 @@
         </div>
     </div>
 
+    <!-- ==================== واجهة تسجيل الدخول وإنشاء الحساب ==================== -->
     <div class="auth-container" id="auth-box">
         <div class="auth-header">
             <h2 id="auth-title">تسجيل الدخول للمحفظة</h2>
@@ -405,6 +409,7 @@
                 <input type="password" id="auth-password" placeholder="••••••••" minlength="6" required>
             </div>
             
+            <!-- الحقول الجديدة الخاصة بالشركة والمندوب عند إنشاء الحساب -->
             <div id="signup-extra-fields" style="display: none; border-top: 1px dashed #e2e8f0; padding-top: 15px; margin-top: 15px;">
                 <div class="input-block">
                     <label>اسم الشركة / المذخر التجاري</label>
@@ -423,6 +428,7 @@
         </div>
     </div>
 
+    <!-- ==================== واجهة التطبيق الرئيسية ==================== -->
     <div class="app-container" id="app-box">
         <header>
             <div>
@@ -492,6 +498,7 @@
         </div>
     </div>
 
+    <!-- مكتبات Firebase الأصلية والمتوافقة -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
@@ -518,9 +525,7 @@
         let transactions = [];
         let isLoginMode = true; 
         let unsubscribeSnapshot = null; 
-        let editingTxId = null; // متغير تتبع معرف الوصل الجاري تعديله
-
-        // متغير لتخزين حدث التثبيت التلقائي للنظام
+        let editingTxId = null; 
         let deferredPrompt = null;
 
         // ربط عناصر واجهة المستخدم
@@ -557,7 +562,6 @@
             }
         }
 
-        // الإمساك بحدث التثبيت الأصلي من متصفحات الأندرويد لجعله فوري وتلقائي بنقرة واحدة
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
@@ -785,9 +789,8 @@
             const tx = transactions.find(t => t.id === id);
             if (!tx) return;
 
-            editingTxId = id; // تخزين آيدي المعاملة المستهدفة بالوضع التعديلي
+            editingTxId = id; 
 
-            // تعبئة حقول النموذج بالبيانات الحالية للعملية
             document.getElementById('tx-name').value = tx.name;
             document.getElementById('tx-desc').value = tx.desc;
             document.getElementById('tx-amount').value = tx.amount;
@@ -798,13 +801,12 @@
                 document.getElementById('type-expense').checked = true;
             }
 
-            // تحديث تصميم ونصوص النموذج البرمجي إلى حالة التعديل
+            // تحديث تصميم ونصوص النموذج البرمجي إلى حالة التعديل (تم إصلاح الخطأ البرمي هنا بالصيغة النصية القواعدية الصحيحة)
             formTitle.innerHTML = `⚙️ تعديل وتحديث بيانات الوصل <span style="color:var(--primary)">#${tx.receiptNo}</span>`;
             btnTxSubmit.textContent = "تحديث المعاملة الماليّة";
-            btnTxSubmit.style.background = var(--success);
-            btnTxCancel.style.display = "block"; // إظهار زر إلغاء التعديل
+            btnTxSubmit.style.background = "var(--success)"; 
+            btnTxCancel.style.display = "block"; 
 
-            // صعود حركي سلس جداً لأعلى الصفحة حيث يقع النموذج
             document.querySelector('.form-section').scrollIntoView({ behavior: 'smooth' });
         }
 
@@ -830,23 +832,21 @@
             const amount = document.getElementById('tx-amount').value;
 
             if (editingTxId) {
-                // 🔥 [مسار التعديل]: تحديث الوصل الموجود مسبقاً في Firestore دون تغيير الآيدي أو التاريخ الأصلي أو رقم الوصل
                 db.collection('transactions').doc(editingTxId).update({
                     type: type,
                     name: name,
                     desc: desc,
                     amount: Number(amount),
-                    updatedAt: firebase.firestore.FieldValue.serverTimestamp() // توثيق وقت التعديل فقط
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp() 
                 })
                 .then(() => {
-                    cancelEditMode(); // إنهاء وضع التعديل وتنظيف الحقول
+                    cancelEditMode(); 
                 })
                 .catch((error) => {
                     alert('خطأ في تحديث البيانات السحابية: ' + error.message);
                 });
 
             } else {
-                // 🟢 [مسار الإضافة النظيفة]: توليد رقم تسلسلي عشوائي نظيف فريد مكون من 6 أرقام للوصل المالي الجديد
                 const generatedReceiptNo = Math.floor(100000 + Math.random() * 900000);
                 const now = new Date();
                 const dateStr = now.toLocaleDateString('ar-EG') + ' ' + now.toLocaleTimeString('ar-EG', {hour: '2-digit', minute:'2-digit'});
@@ -875,7 +875,6 @@
 
         function deleteTx(id) {
             if(confirm('هل أنت متأكد من حذف هذا الوصل من حسابك نهائياً؟')) {
-                // إذا كان المستخدم يحذف نفس الوصل المفتوح للتعديل حالياً، نغلق وضع التعديل فوراً
                 if (editingTxId === id) cancelEditMode();
 
                 db.collection('transactions').doc(id).delete()
