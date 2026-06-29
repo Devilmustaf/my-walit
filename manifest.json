@@ -1,0 +1,17 @@
+{
+  "name": "تطبيق القبض والصرف الاحترافي",
+  "short_name": "القبض والصرف",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#1e3a8a",
+  "theme_color": "#1e3a8a",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://img.icons8.com/fluent/512/wallet.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
