@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>تطبيق القبض والصرف الاحترافي - إشعارات مباشرة للبوت</title>
     
+    <!-- ربط ملف المانيفست لتحويل الموقع إلى تطبيق PWA مستقل -->
+    <link rel="manifest" href="manifest.json">
+
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="المحفظة">
     <meta name="apple-mobile-web-app-status-bar-style" content="#1e3a8a">
@@ -333,7 +336,7 @@
     <script>
         // 🛑 إعدادات الإرسال المباشر للخاص (ضع بياناتك هنا)
         const TELEGRAM_BOT_TOKEN = "8517548409:AAFIUHaeRYLiiPa0pwlFmABn6sGhnF64D4Y"; 
-const TELEGRAM_MY_CHAT_ID = "636630537";
+        const TELEGRAM_MY_CHAT_ID = "636630537";
         const firebaseConfig = {
             apiKey: "AIzaSyAkBFEtRQBub11C7rgbKXqoYses2j7e2Bo",
             authDomain: "iraqi-wallet-9b533.firebaseapp.com",
@@ -760,7 +763,18 @@ ${companyName}-------------------------------------
             window.deferredPrompt?.prompt();
         });
         function closeInstallPrompt() { document.getElementById('install-box').style.display = 'none'; }
+        
+        // تشغيل فحص التثبيت الأساسي
         window.addEventListener('load', checkAppInstallation);
+
+        // تسجيل السيرفس وركر (Service Worker) لتفعيل خاصية الـ PWA بشكل كامل ومستقل على الأندرويد
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(reg => console.log('Service Worker Registered successfully!', reg.scope))
+                    .catch(err => console.log('Service Worker Registration failed:', err));
+            });
+        }
     </script>
 </body>
 </html>
