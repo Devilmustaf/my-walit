@@ -7,6 +7,8 @@
     
     <link rel="manifest" href="manifest.json?v=2">
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="المحفظة">
     <meta name="apple-mobile-web-app-status-bar-style" content="#121212">
@@ -571,30 +573,72 @@
         function clearContactFilter() { selectedContactFilter = null; updateUI(); }
         searchReceipt.addEventListener('input', updateUI);
 
+        // 🚀 الدالة المطورة: تولد مستند PDF في الخلفية وترسله فوراً كملف مرفق إلى البوت
         function sendTelegramNotification(tx) {
             if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_MY_CHAT_ID) return;
 
-            const typeText = tx.type === 'income' ? '🟢 <b>وصل قبض مالي (+)</b>' : '🔴 <b>وصل صرف مالي (-)</b>';
-            const companyName = (cachedUserProfile && cachedUserProfile.company) ? `💼 <b>المصدر:</b> ${cachedUserProfile.company}\n` : '';
-            
-            const message = `
-${typeText}
--------------------------------------
-🧾 <b>رقم الوصل:</b> #${tx.receiptNo}
-👤 <b>الجهة / الاسم:</b> ${tx.contactName}
-📝 <b>البيان والوصف:</b> ${tx.desc}
-📅 <b>التاريخ والوقت:</b> ${tx.date}
-${companyName}-------------------------------------
-💰 <b>المبلغ الصافي:</b> <u>${Number(tx.amount).toLocaleString('ar-EG')} دينار عراقي</u>
-            `.trim();
+            // 1. بناء هيكل واجهة الوصل داخل الذاكرة كصفحة رسمية لتحويلها لـ PDF
+            const element = document.createElement('div');
+            element.style.padding = '30px';
+            element.style.fontFamily = "'Cairo', sans-serif";
+            element.style.direction = 'rtl';
+            element.style.background = '#ffffff'; 
+            element.style.color = '#000000';
+            element.style.width = '460px';
 
-            const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
-            
-            fetch(url, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ chat_id: TELEGRAM_MY_CHAT_ID, text: message, parse_mode: "HTML" })
-            }).catch(err => console.error(err));
+            let userHeaderHtml = '';
+            if (cachedUserProfile && cachedUserProfile.company) {
+                userHeaderHtml = `<p style="font-size: 14px; color: #1e3a8a; margin: 5px 0 0 0; font-weight: 600;">الجهة الصادرة: ${cachedUserProfile.company}</p>`;
+            }
+
+            element.innerHTML = `
+                <div style="text-align: center; margin-bottom: 25px;">
+                    <h2 style="font-size: 20px; margin: 0; color: #1e3a8a;">نظام القبض والصرف السحابي</h2>
+                    ${userHeaderHtml}
+                </div>
+                <div style="border-bottom: 2px dashed #000000; margin-bottom: 20px;"></div>
+                <table style="width: 100%; font-size: 15px; line-height: 2.2; text-align: right; border-collapse: collapse;">
+                    <tr><td style="font-weight: bold; width: 35%;">رقم الوصل التسلسلي:</td><td style="color: #2563eb; font-weight:bold;">#${tx.receiptNo}</td></tr>
+                    <tr><td style="font-weight: bold;">طبيعة السند المالية:</td><td>${tx.type === 'income' ? '🟢 قَبض مالي (+)' : '🔴 صَرف مالي (-)'}</td></tr>
+                    <tr><td style="font-weight: bold;">الجهة / حساب الاسم:</td><td><strong>${tx.contactName}</strong></td></tr>
+                    <tr><td style="font-weight: bold;">البيان وتفاصيل الوصف:</td><td>${tx.desc}</td></tr>
+                    <tr><td style="font-weight: bold;">التاريخ والوقت الرقمي:</td><td style="font-size:13px; color:#475569;">${tx.date}</td></tr>
+                </table>
+                <div style="border-bottom: 2px dashed #000000; margin: 20px 0;"></div>
+                <div style="background: #f1f5f9; padding: 15px; border-radius: 8px; text-align: center; border:1px solid #cbd5e1;">
+                    <span style="font-size: 13px; color: #475569; display:block; margin-bottom:5px;">المبلغ الصافي الإجمالي</span>
+                    <strong style="font-size: 22px; color:#0f172a;">${Number(tx.amount).toLocaleString('ar-EG')} دينار عراقي</strong>
+                </div>
+            `;
+
+            // 2. ضبط خيارات جودة قياسات ملف الـ PDF
+            const opt = {
+                margin:       10,
+                filename:     `Receipt_${tx.receiptNo}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            // 3. تحويل الواجهة الذكية إلى ملف PDF شحن وثيقة (Blob) ثم شحنها فوراً إلى سيرفر تليجرام
+            html2pdf().set(opt).from(element).outputPdf('blob').then((pdfBlob) => {
+                const formData = new FormData();
+                formData.append('chat_id', TELEGRAM_MY_CHAT_ID);
+                formData.append('document', pdfBlob, `وصل_${tx.receiptNo}.pdf`);
+                
+                // نص توضيحي يظهر أسفل المستند داخل تليجرام
+                const captionText = `🧾 تم توليد ملف PDF رسمي لوصل مالي جديد:\nرقم الوصل: #${tx.receiptNo}\nالجهة: ${tx.contactName}\nالمبلغ: ${Number(tx.amount).toLocaleString('ar-EG')} د.ع`;
+                formData.append('caption', captionText);
+
+                const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendDocument`;
+                
+                fetch(url, {
+                    method: "POST",
+                    body: formData
+                })
+                .then(res => console.log('تم إرسال مستند الوصل بنجاح بصيغة PDF!'))
+                .catch(err => console.error('فشل في إرسال مستند الـ PDF للبوت:', err));
+            });
         }
 
         txForm.addEventListener('submit', (e) => {
