@@ -1,8 +1,9 @@
-const CACHE_NAME = 'wallet-v1';
+const CACHE_NAME = 'wallet-v2'; // 👈 غيرنا الرقم هنا من v1 إلى v2 لتحديث الكاش
 const ASSETS = [
   './',
   './index.html',
-  './manifest.json'
+  './manifest.json',
+  './logo.png'                    // 👈 أضفنا شعارك الجديد هنا ليتم حفظه في الجوال
 ];
 
 // تثبيت الـ Service Worker وحفظ الملفات الأساسية
@@ -14,7 +15,7 @@ self.addEventListener('install', (e) => {
   );
 });
 
-// تفعيل واستقبال البيانات (شرط أساسي لظهور زر التثبيت)
+// تفعيل واستقبال البيانات
 self.addEventListener('fetch', (e) => {
   e.respondWith(
     caches.match(e.request).then((response) => {
