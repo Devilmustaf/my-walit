@@ -3,7 +3,7 @@
   "short_name": "القبض والصرف",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#121212",
+  "background_color": "#fdf2e4",
   "theme_color": "#121212",
   "orientation": "portrait",
   "icons": [
