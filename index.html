@@ -162,6 +162,7 @@
         .badge.supplier { background: #78350f; color: #fbbf24; }
 
         .transaction-list { display: flex; flex-direction: column; gap: 10px; }
+        .transaction-list { display: flex; flex-direction: column; gap: 10px; }
         .transaction-item { background: var(--surface); padding: 15px; border-radius: 12px; border-right: 5px solid #475569; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: flex; flex-direction: column; gap: 8px; }
         .transaction-item.income { border-right-color: var(--success); }
         .transaction-item.expense { border-right-color: var(--danger); }
@@ -573,71 +574,98 @@
         function clearContactFilter() { selectedContactFilter = null; updateUI(); }
         searchReceipt.addEventListener('input', updateUI);
 
-        // 🚀 الدالة المطورة: تولد مستند PDF في الخلفية وترسله فوراً كملف مرفق إلى البوت
+        // 🚀 الدالة المحدثة: بناء هيكل الوصل التفصيلي الجميل وإرساله كـ PDF للبوت فوراً
         function sendTelegramNotification(tx) {
             if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_MY_CHAT_ID) return;
 
-            // 1. بناء هيكل واجهة الوصل داخل الذاكرة كصفحة رسمية لتحويلها لـ PDF
             const element = document.createElement('div');
-            element.style.padding = '30px';
-            element.style.fontFamily = "'Cairo', sans-serif";
+            element.style.padding = '35px';
+            element.style.fontFamily = "'Cairo', 'Segoe UI', Arial, sans-serif";
             element.style.direction = 'rtl';
-            element.style.background = '#ffffff'; 
-            element.style.color = '#000000';
-            element.style.width = '460px';
+            element.style.background = '#ffffff';
+            element.style.color = '#1e293b';
+            element.style.width = '480px';
+            element.style.boxSizing = 'border-box';
+            element.style.border = '1px solid #e2e8f0';
+            element.style.borderRadius = '8px';
 
-            let userHeaderHtml = '';
-            if (cachedUserProfile && cachedUserProfile.company) {
-                userHeaderHtml = `<p style="font-size: 14px; color: #1e3a8a; margin: 5px 0 0 0; font-weight: 600;">الجهة الصادرة: ${cachedUserProfile.company}</p>`;
+            let companyName = "مذخر دار الدواء";
+            if (typeof cachedUserProfile !== 'undefined' && cachedUserProfile && cachedUserProfile.company) {
+                companyName = cachedUserProfile.company;
+            } else if (tx.source) {
+                companyName = tx.source;
             }
 
             element.innerHTML = `
-                <div style="text-align: center; margin-bottom: 25px;">
-                    <h2 style="font-size: 20px; margin: 0; color: #1e3a8a;">نظام القبض والصرف السحابي</h2>
-                    ${userHeaderHtml}
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <h2 style="font-size: 22px; margin: 0 0 6px 0; color: #1e3a8a; font-weight: 700;">النظام الذكي للقبض والصرف</h2>
+                    <p style="font-size: 14px; color: #475569; margin: 0 0 6px 0; font-weight: 600;">المندوب التجاري المعتمد: ${companyName}</p>
+                    <p style="font-size: 13px; color: #64748b; margin: 0; font-style: italic;">وصل معاملات مالي - نسخة الحساب الآمن</p>
                 </div>
-                <div style="border-bottom: 2px dashed #000000; margin-bottom: 20px;"></div>
-                <table style="width: 100%; font-size: 15px; line-height: 2.2; text-align: right; border-collapse: collapse;">
-                    <tr><td style="font-weight: bold; width: 35%;">رقم الوصل التسلسلي:</td><td style="color: #2563eb; font-weight:bold;">#${tx.receiptNo}</td></tr>
-                    <tr><td style="font-weight: bold;">طبيعة السند المالية:</td><td>${tx.type === 'income' ? '🟢 قَبض مالي (+)' : '🔴 صَرف مالي (-)'}</td></tr>
-                    <tr><td style="font-weight: bold;">الجهة / حساب الاسم:</td><td><strong>${tx.contactName}</strong></td></tr>
-                    <tr><td style="font-weight: bold;">البيان وتفاصيل الوصف:</td><td>${tx.desc}</td></tr>
-                    <tr><td style="font-weight: bold;">التاريخ والوقت الرقمي:</td><td style="font-size:13px; color:#475569;">${tx.date}</td></tr>
+
+                <div style="border-bottom: 2px dotted #cbd5e1; margin-bottom: 20px;"></div>
+
+                <div style="text-align: center; margin-bottom: 25px;">
+                    <span style="font-size: 13px; color: #64748b; display: block; margin-bottom: 2px;">رقم الوصل:</span>
+                    <strong style="font-size: 28px; color: #2563eb; font-family: monospace; letter-spacing: 1px;">#${tx.receiptNo}</strong>
+                </div>
+
+                <table style="width: 100%; font-size: 15px; border-collapse: collapse; margin-bottom: 25px; text-align: right;">
+                    <tr style="border-bottom: 1px solid #f1f5f9;">
+                        <td style="padding: 12px 0; color: #64748b; font-weight: 600; width: 35%;">نوع العملية:</td>
+                        <td style="padding: 12px 0; color: #0f172a; font-weight: 700; text-align: left;">
+                            ${tx.type === 'income' ? '<span style="color: #10b981;">قبض وإيراد (إدخال)</span>' : '<span style="color: #ef4444;">صرف وصادر (إخراج)</span>'}
+                        </td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #f1f5f9;">
+                        <td style="padding: 12px 0; color: #64748b; font-weight: 600;">الزبون / الجهة:</td>
+                        <td style="padding: 12px 0; color: #0f172a; font-weight: 700; text-align: left;">${tx.contactName}</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #f1f5f9;">
+                        <td style="padding: 12px 0; color: #64748b; font-weight: 600;">الالبيان والوصف:</td>
+                        <td style="padding: 12px 0; color: #334155; text-align: left; line-height: 1.5;">${tx.desc}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 12px 0; color: #64748b; font-weight: 600;">التاريخ:</td>
+                        <td style="padding: 12px 0; color: #475569; text-align: left; font-size: 14px;">${tx.date}</td>
+                    </tr>
                 </table>
-                <div style="border-bottom: 2px dashed #000000; margin: 20px 0;"></div>
-                <div style="background: #f1f5f9; padding: 15px; border-radius: 8px; text-align: center; border:1px solid #cbd5e1;">
-                    <span style="font-size: 13px; color: #475569; display:block; margin-bottom:5px;">المبلغ الصافي الإجمالي</span>
-                    <strong style="font-size: 22px; color:#0f172a;">${Number(tx.amount).toLocaleString('ar-EG')} دينار عراقي</strong>
+
+                <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 18px; border-radius: 8px; text-align: center; margin-bottom: 25px;">
+                    <span style="font-size: 14px; color: #64748b; display: block; margin-bottom: 5px; font-weight: 600;">المبلغ الإجمالي</span>
+                    <strong style="font-size: 26px; color: #1e3a8a; font-weight: 800;">
+                        ${Number(tx.amount).toLocaleString('ar-EG')} د.ع
+                    </strong>
+                </div>
+
+                <div style="text-align: center; color: #64748b; font-size: 13px; line-height: 1.6;">
+                    <p style="margin: 0 0 4px 0; font-weight: 600; color: #475569;">شكرا لتعاملكم معنا</p>
+                    <p style="margin: 0; color: #10b981; font-size: 12px; font-weight: 600;">تم حفظ وتوثيق المعاملة سحابياً</p>
                 </div>
             `;
 
-            // 2. ضبط خيارات جودة قياسات ملف الـ PDF
             const opt = {
-                margin:       10,
+                margin:       [8, 8, 8, 8],
                 filename:     `Receipt_${tx.receiptNo}.pdf`,
                 image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true },
-                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                html2canvas:  { scale: 3, useCORS: true, letterRendering: true },
+                jsPDF:        { unit: 'mm', format: [135, 195], orientation: 'portrait' } 
             };
 
-            // 3. تحويل الواجهة الذكية إلى ملف PDF شحن وثيقة (Blob) ثم شحنها فوراً إلى سيرفر تليجرام
             html2pdf().set(opt).from(element).outputPdf('blob').then((pdfBlob) => {
                 const formData = new FormData();
                 formData.append('chat_id', TELEGRAM_MY_CHAT_ID);
                 formData.append('document', pdfBlob, `وصل_${tx.receiptNo}.pdf`);
                 
-                // نص توضيحي يظهر أسفل المستند داخل تليجرام
-                const captionText = `🧾 تم توليد ملف PDF رسمي لوصل مالي جديد:\nرقم الوصل: #${tx.receiptNo}\nالجهة: ${tx.contactName}\nالمبلغ: ${Number(tx.amount).toLocaleString('ar-EG')} د.ع`;
+                const captionText = `🧾 تم توليد ملف PDF رسمي لوصل جديد:\nرقم الوصل: #${tx.receiptNo}\nالجهة: ${tx.contactName}\nالمبلغ: ${Number(tx.amount).toLocaleString('ar-EG')} د.ع`;
                 formData.append('caption', captionText);
 
-                const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendDocument`;
-                
-                fetch(url, {
+                fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendDocument`, {
                     method: "POST",
                     body: formData
                 })
-                .then(res => console.log('تم إرسال مستند الوصل بنجاح بصيغة PDF!'))
-                .catch(err => console.error('فشل في إرسال مستند الـ PDF للبوت:', err));
+                .then(res => console.log('تم إرسال مستند الوصل بنجاح!'))
+                .catch(err => console.error('حدث خطأ أثناء إرسال المستند:', err));
             });
         }
 
@@ -718,7 +746,7 @@
 
             let userHeaderHtml = '';
             if (cachedUserProfile && cachedUserProfile.company) {
-                userHeaderHtml = `<p style="font-size: 13px; color: #1e3a8a; margin: 4px 0 0 0; font-weight: 600;">الجهة الصادرة: ${cachedUserProfile.company}</p>`;
+                userHeaderHtml = `<p style="font-size: 13px; color: #1e3a8a; margin: 4px 0 0 0; font-weight: 600;">الجهة القابضة: ${cachedUserProfile.company}</p>`;
             }
 
             const doc = iframe.contentWindow.document;
