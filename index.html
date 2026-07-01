@@ -573,21 +573,20 @@
         function clearContactFilter() { selectedContactFilter = null; updateUI(); }
         searchReceipt.addEventListener('input', updateUI);
 
-        // 👑 الدالة المحدثة والمعدلة بالكامل لحل مشكلة التماسك والمساحة البيضاء الفراغية 👑
+        // 👑 الدالة المحدثة والمصححة بالكامل لمنع انفصال الصفحة وضمان التنسيق القانوني المستقر 👑
         function sendTelegramNotification(tx) {
             if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_MY_CHAT_ID) return;
 
-            // 1. إنشاء حاوية مخصصة للوصل ووضعها بشكل مطلق مخفي مؤقتاً لتجنب إزاحة محاذاة الشاشة
+            // 1. إنشاء الحاوية الكلية وتثبيت العرض والخصائص لمنع الـ page-break نهائياً
             const element = document.createElement('div');
             element.style.position = 'fixed';
             element.style.left = '-9999px';
             element.style.top = '0';
-            element.style.width = '450px'; // عرض متناسق تماماً مع إعدادات صفحة الـ PDF الثابتة
-            element.style.padding = '30px';
-            element.style.fontFamily = "'Cairo', 'Segoe UI', Arial, sans-serif";
+            element.style.width = '480px'; 
+            element.style.padding = '20px';
+            element.style.fontFamily = "'Cairo', sans-serif";
             element.style.direction = 'rtl';
             element.style.background = '#ffffff';
-            element.style.color = '#1e293b';
             element.style.boxSizing = 'border-box';
 
             let companyName = "مذخر دار الدواء";
@@ -598,89 +597,94 @@
             }
 
             element.innerHTML = `
-                <div style="text-align: center; margin-bottom: 20px;">
-                    <h2 style="font-size: 20px; margin: 0 0 6px 0; color: #1e3a8a; font-weight: 700;">النظام الذكي للقبض والصرف</h2>
-                    <p style="font-size: 13px; color: #475569; margin: 0 0 6px 0; font-weight: 600;">المندوب التجاري المعتمد: ${companyName}</p>
-                    <p style="font-size: 12px; color: #64748b; margin: 0; font-style: italic;">وصل معاملات مالي - نسخة الحساب الآمن</p>
-                </div>
+                <div style="border: 2px solid #1e3a8a; padding: 20px; border-radius: 12px; background: #ffffff; page-break-inside: avoid !important; break-inside: avoid !important;">
+                    
+                    <!-- الهيدر الرسمي المستقر -->
+                    <div style="text-align: center; margin-bottom: 12px;">
+                        <h2 style="font-size: 20px; margin: 0 0 4px 0; color: #1e3a8a; font-weight: 700;">النظام الذكي للقبض والصرف</h2>
+                        <p style="font-size: 13px; color: #475569; margin: 0 0 4px 0; font-weight: 600;">المندوب التجاري: ${companyName}</p>
+                        <p style="font-size: 11px; color: #94a3b8; margin: 0; font-style: italic;">وصل مالي إلكتروني - نسخة الحساب الآمن</p>
+                    </div>
 
-                <div style="border-bottom: 2px dotted #cbd5e1; margin-bottom: 20px;"></div>
+                    <div style="border-bottom: 2px dashed #cbd5e1; margin-bottom: 15px;"></div>
 
-                <div style="text-align: center; margin-bottom: 20px;">
-                    <span style="font-size: 12px; color: #64748b; display: block; margin-bottom: 2px;">رقم الوصل:</span>
-                    <strong style="font-size: 26px; color: #2563eb; font-family: monospace; letter-spacing: 1px;">#${tx.receiptNo}</strong>
-                </div>
+                    <!-- رقم الوصل التسلسلي البارز -->
+                    <div style="text-align: center; margin-bottom: 15px;">
+                        <span style="font-size: 12px; color: #64748b; display: block; margin-bottom: 2px;">رقم الوصل:</span>
+                        <strong style="font-size: 26px; color: #2563eb; font-family: monospace; letter-spacing: 1px;">#${tx.receiptNo}</strong>
+                    </div>
 
-                <table style="width: 100%; font-size: 14px; border-collapse: collapse; margin-bottom: 20px; text-align: right;">
-                    <tr style="border-bottom: 1px solid #f1f5f9;">
-                        <td style="padding: 10px 0; color: #64748b; font-weight: 600; width: 35%;">نوع العملية:</td>
-                        <td style="padding: 10px 0; color: #0f172a; font-weight: 700; text-align: left;">
-                            ${tx.type === 'income' ? '<span style="color: #10b981;">قبض وإيراد (إدخال)</span>' : '<span style="color: #ef4444;">صرف وصادر (إخراج)</span>'}
-                        </td>
-                    </tr>
-                    <tr style="border-bottom: 1px solid #f1f5f9;">
-                        <td style="padding: 10px 0; color: #64748b; font-weight: 600;">الزبون / الجهة:</td>
-                        <td style="padding: 10px 0; color: #0f172a; font-weight: 700; text-align: left;">${tx.contactName}</td>
-                    </tr>
-                    <tr style="border-bottom: 1px solid #f1f5f9;">
-                        <td style="padding: 10px 0; color: #64748b; font-weight: 600;">البيان والوصف:</td>
-                        <td style="padding: 10px 0; color: #334155; text-align: left; line-height: 1.5;">${tx.desc}</td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 10px 0; color: #64748b; font-weight: 600;">التاريخ:</td>
-                        <td style="padding: 10px 0; color: #475569; text-align: left; font-size: 13px;">${tx.date}</td>
-                    </tr>
-                </table>
+                    <!-- جدول تفاصيل الحركة المالية الملموم بدقة -->
+                    <table style="width: 100%; font-size: 13px; border-collapse: collapse; margin-bottom: 15px; text-align: right;">
+                        <tr style="border-bottom: 1px solid #f1f5f9;">
+                            <td style="padding: 8px 4px; color: #64748b; font-weight: 600; width: 30%;">نوع العملية:</td>
+                            <td style="padding: 8px 4px; color: #0f172a; font-weight: 700; text-align: left;">
+                                ${tx.type === 'income' ? '<span style="color: #10b981;">قبض وإيراد (إدخل)</span>' : '<span style="color: #ef4444;">صرف وصادر (إخراج)</span>'}
+                            </td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #f1f5f9;">
+                            <td style="padding: 8px 4px; color: #64748b; font-weight: 600;">الزبون / الجهة:</td>
+                            <td style="padding: 8px 4px; color: #0f172a; font-weight: 700; text-align: left;">${tx.contactName}</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #f1f5f9;">
+                            <td style="padding: 8px 4px; color: #64748b; font-weight: 600;">البيان والوصف:</td>
+                            <td style="padding: 8px 4px; color: #334155; text-align: left; line-height: 1.4;">${tx.desc}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px 4px; color: #64748b; font-weight: 600;">التاريخ والوقت:</td>
+                            <td style="padding: 8px 4px; color: #475569; text-align: left; font-size: 12px;">${tx.date}</td>
+                        </tr>
+                    </table>
 
-                <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 20px;">
-                    <span style="font-size: 13px; color: #64748b; display: block; margin-bottom: 5px; font-weight: 600;">المبلغ الإجمالي</span>
-                    <strong style="font-size: 24px; color: #1e3a8a; font-weight: 800;">
-                        ${Number(tx.amount).toLocaleString('ar-EG')} د.ع
-                    </strong>
-                </div>
+                    <!-- صندوق المبلغ المحكم والإجمالي -->
+                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px; border-radius: 8px; text-align: center; margin-bottom: 15px;">
+                        <span style="font-size: 12px; color: #64748b; display: block; margin-bottom: 3px; font-weight: 600;">المبلغ الإجمالي الخاضع للقيد</span>
+                        <strong style="font-size: 24px; color: #1e3a8a; font-weight: 800;">
+                            ${Number(tx.amount).toLocaleString('ar-EG')} د.ع
+                        </strong>
+                    </div>
 
-                <div style="text-align: center; color: #64748b; font-size: 12px; line-height: 1.6;">
-                    <p style="margin: 0 0 4px 0; font-weight: 600; color: #475569;">شكرا لتعاملكم معنا</p>
-                    <p style="margin: 0; color: #10b981; font-size: 11px; font-weight: 600;">تم حفظ وتوثيق المعاملة سحابياً</p>
+                    <!-- التوقيع والختم المعتمد -->
+                    <div style="text-align: center; color: #10b981; font-size: 11px; font-weight: 600;">
+                        <p style="margin: 0;">✓ تم الحفظ سحابياً والتوثيق بنجاح بدون كشط أو تعديل</p>
+                    </div>
                 </div>
             `;
 
-            // 2. إدخال العنصر للـ DOM مؤقتاً لتبدأ عملية المعالجة بدون مشاكل الـ Offsets
             document.body.appendChild(element);
 
+            // 2. إعدادات الـ PDF المتناسقة والأمنية لمنع تمدد المستند لصفحة ثانية
             const opt = {
-                margin:       0, // تصفير الهوامش لضمان عدم حدوث انقسامات وهمية
+                margin:       0, 
                 filename:     `Receipt_${tx.receiptNo}.pdf`,
                 image:        { type: 'jpeg', quality: 0.98 },
                 html2canvas:  { 
                     scale: 2, 
                     useCORS: true, 
-                    scrollY: 0, // تصفير محور التمرير الرأسي تماماً للتخلص من الفراغ الأبيض
-                    scrollX: 0, 
-                    letterRendering: true 
+                    scrollY: 0,
+                    scrollX: 0
                 },
-                jsPDF:        { unit: 'mm', format: [135, 195], orientation: 'portrait' } 
+                jsPDF:        { unit: 'mm', format: [135, 185], orientation: 'portrait' } 
             };
 
             html2pdf().set(opt).from(element).outputPdf('blob').then((pdfBlob) => {
-                // 3. مسح العنصر فوراً للتنظيف
-                element.remove();
+                element.remove(); // تنظيف فوري من الـ DOM
 
                 const formData = new FormData();
                 formData.append('chat_id', TELEGRAM_MY_CHAT_ID);
                 formData.append('document', pdfBlob, `وصل_${tx.receiptNo}.pdf`);
                 
-                const captionText = `🧾 تم توليد ملف PDF رسمي لوصل جديد:\nرقم الوصل: #${tx.receiptNo}\nالجهة: ${tx.contactName}\nالمبلغ: ${Number(tx.amount).toLocaleString('ar-EG')} د.ع`;
+                const captionText = `🧾 سند مالي رسمي سحابي جديد:\n🔹 رقم الوصل: #${tx.receiptNo}\n🔹 الجهة: ${tx.contactName}\n🔹 المبلغ: ${Number(tx.amount).toLocaleString('ar-EG')} د.ع`;
                 formData.append('caption', captionText);
 
                 fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendDocument`, {
                     method: "POST",
                     body: formData
                 })
-                .then(res => console.log('تم إرسال مستند الوصل بنجاح!'))
-                .catch(err => console.error('حدث خطأ أثناء إرسال المستند:', err));
+                .then(res => console.log('تم الإرسال بنجاح لوصل متكامل'))
+                .catch(err => console.error(err));
             }).catch(err => {
-                console.error("خطأ التوليد:", err);
+                console.error(err);
                 element.remove();
             });
         }
@@ -762,7 +766,7 @@
 
             let userHeaderHtml = '';
             if (cachedUserProfile && cachedUserProfile.company) {
-                userHeaderHtml = `<p style="font-size: 13px; color: #1e3a8a; margin: 4px 0 0 0; font-weight: 600;">الجهة القابضة: ${cachedUserProfile.company}</p>`;
+                userHeaderHtml = `<p style="font-size: 13px; color: #1e3a8a; margin: 4px 0 0 0; font-weight: 600;">الجهة الصادرة: ${cachedUserProfile.company}</p>`;
             }
 
             const doc = iframe.contentWindow.document;
@@ -806,11 +810,11 @@
             setTimeout(() => { iframe.contentWindow.focus(); iframe.contentWindow.print(); }, 500);
         }
 
-        /* 👑 كود شريط التثبيت المطور والتسجيل البرمجي للسيرفس وركر 👑 */
+        /* كود شريط التثبيت المطور والتسجيل البرمجي للسيرفس وركر */
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js')
-                    .then(reg => console.log('تم تسجيل الـ Service Worker بنناج'))
+                    .then(reg => console.log('تم تسجيل الـ Service Worker بنجاح'))
                     .catch(err => console.error('فشل تسجيل السيرفس وركر:', err));
             });
         }
