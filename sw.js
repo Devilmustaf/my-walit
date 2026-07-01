@@ -1,25 +1,40 @@
-const CACHE_NAME = 'wallet-v2'; // 👈 غيرنا الرقم هنا من v1 إلى v2 لتحديث الكاش
+const CACHE_NAME = 'wallet-v2'; // 1. قمنا بتغيير الإصدار إلى v2 لإجبار المتصفح على التحديث
 const ASSETS = [
   './',
   './index.html',
-  './manifest.json',
-  './logo.png'                    // 👈 أضفنا شعارك الجديد هنا ليتم حفظه في الجوال
+  './manifest.json'
 ];
 
-// تثبيت الـ Service Worker وحفظ الملفات الأساسية
+// تثبيت السيرفس وركر وتحميل الملفات الجديدة
 self.addEventListener('install', (e) => {
-  e.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS);
-    })
-  );
+    e.waitUntil(
+        caches.open(CACHE_NAME).then((cache) => {
+            return cache.addAll(ASSETS);
+        }).then(() => self.skipWaiting()) // إجبار السيرفس وركر الجديد على التنشيط فوراً
+    );
 });
 
-// تفعيل واستقبال البيانات
+// 2. دالة التطهير الحاسمة: تحذف كاش 'wallet-v1' القديم تلقائياً من جهاز المستخدم
+self.addEventListener('activate', (e) => {
+    e.waitUntil(
+        caches.keys().then((keys) => {
+            return Promise.all(
+                keys.map((key) => {
+                    if (key !== CACHE_NAME) {
+                        console.log('جاري حذف ذاكرة التخزين المؤقت القديمة:', key);
+                        return caches.delete(key);
+                    }
+                })
+            );
+        }).then(() => self.clients.claim()) // السيطرة على الصفحات المفتوحة فوراً
+    );
+});
+
+// استراتيجية جلب البيانات الحالية
 self.addEventListener('fetch', (e) => {
-  e.respondWith(
-    caches.match(e.request).then((response) => {
-      return response || fetch(e.request);
-    })
-  );
+    e.respondWith(
+        caches.match(e.request).then((response) => {
+            return response || fetch(e.request);
+        })
+    );
 });
