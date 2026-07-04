@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
-<link rel="manifest" href="manifest.json">
+<head>
+    <link rel="manifest" href="manifest.json">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>تطبيق القبض والصرف الاحترافي - إشعارات مباشرة للبوت</title>
@@ -246,7 +247,7 @@
 
         <!-- قسم تعريف وإضافة الجهات (الزبائن والمجهزين) -->
         <div class="form-section">
-            <h3>➕ تعريف جهة جديدة (زبون / مجهز)</h3>
+            <h3 id="contact-form-title">➕ تعريف جهة جديدة (زبون / مجهز)</h3>
             <form id="contact-form" style="display: flex; flex-direction: column; gap: 10px;">
                 <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px;">
                     <input type="text" id="contact-name" placeholder="اسم الشخص أو المذخر..." style="padding:10px; border-radius:8px; border:1px solid #cbd5e1; font-size:14px;" required>
@@ -255,7 +256,8 @@
                         <option value="supplier">مجهز</option>
                     </select>
                 </div>
-                <button type="submit" class="btn-submit" style="background: #0284c7; padding: 8px; font-size: 13px;">حفظ وتثبيت الجهة</button>
+                <button type="submit" id="btn-contact-submit" class="btn-submit" style="background: #0284c7; padding: 8px; font-size: 13px;">حفظ وتثبيت الجهة</button>
+                <button type="button" id="btn-contact-cancel" class="btn-submit" style="background: #64748b; padding: 8px; font-size: 13px; display: none;" onclick="cancelEditContact()">إلغاء التعديل</button>
             </form>
         </div>
 
@@ -324,6 +326,18 @@
 
             <div class="transaction-list" id="tx-list"></div>
         </div>
+
+        <!-- قسم النسخ الاحتياطي واستعادة البيانات -->
+        <div class="form-section">
+            <h3>💾 النسخ الاحتياطي واستعادة البيانات للـ TSW</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px;">
+                <button type="button" class="btn-submit" style="background: var(--success);" onclick="exportBackup()">تصدير نسخة احتياطية (JSON)</button>
+                <label class="btn-submit" style="background: var(--primary); text-align: center; display: block; cursor: pointer; line-height: 1.5; padding: 12px 0;">
+                    استعادة نسخة احتياطية
+                    <input type="file" id="import-file" accept=".json" style="display: none;" onchange="importBackup(this)">
+                </label>
+            </div>
+        </div>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
@@ -331,9 +345,9 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
     <script>
-        // 🛑 إعدادات الإرسال المباشر للخاص (ضع بياناتك هنا)
+        // 🛑 إعدادات الإرسال المباشر للخاص
         const TELEGRAM_BOT_TOKEN = "8517548409:AAFIUHaeRYLiiPa0pwlFmABn6sGhnF64D4Y"; 
-const TELEGRAM_MY_CHAT_ID = "636630537";
+        const TELEGRAM_MY_CHAT_ID = "636630537";
         const firebaseConfig = {
             apiKey: "AIzaSyAkBFEtRQBub11C7rgbKXqoYses2j7e2Bo",
             authDomain: "iraqi-wallet-9b533.firebaseapp.com",
@@ -357,6 +371,7 @@ const TELEGRAM_MY_CHAT_ID = "636630537";
         let unsubscribeTx = null; 
         let unsubscribeContacts = null;
         let editingTxId = null; 
+        let editingContactId = null;
 
         const authBox = document.getElementById('auth-box');
         const appBox = document.getElementById('app-box');
@@ -439,15 +454,64 @@ const TELEGRAM_MY_CHAT_ID = "636630537";
             const name = document.getElementById('contact-name').value.trim();
             const type = document.getElementById('contact-type').value;
 
-            db.collection('contacts').add({
-                userId: currentUser.uid,
-                name: name,
-                type: type,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            })
-            .then(() => { contactForm.reset(); })
-            .catch(err => alert("خطأ في حفظ الجهة: " + err.message));
+            if (editingContactId) {
+                db.collection('contacts').doc(editingContactId).update({
+                    name: name,
+                    type: type
+                })
+                .then(() => {
+                    db.collection('transactions').where('contactId', '==', editingContactId).get().then(snap => {
+                        const batch = db.batch();
+                        snap.forEach(doc => {
+                            batch.update(doc.ref, { contactName: name });
+                        });
+                        batch.commit();
+                    });
+                    cancelEditContact();
+                })
+                .catch(err => alert("خطأ في تحديث الجهة: " + err.message));
+            } else {
+                db.collection('contacts').add({
+                    userId: currentUser.uid,
+                    name: name,
+                    type: type,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                })
+                .then(() => { contactForm.reset(); })
+                .catch(err => alert("خطأ في حفظ الجهة: " + err.message));
+            }
         });
+
+        function triggerEditContact(id) {
+            const contact = contacts.find(c => c.id === id);
+            if (!contact) return;
+            editingContactId = id;
+            document.getElementById('contact-name').value = contact.name;
+            document.getElementById('contact-type').value = contact.type;
+            document.getElementById('contact-form-title').textContent = "⚙️ تعديل بيانات الجهة";
+            document.getElementById('btn-contact-submit').textContent = "تحديث الجهة";
+            document.getElementById('btn-contact-cancel').style.display = "block";
+            document.getElementById('contact-form-title').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function cancelEditContact() {
+            editingContactId = null;
+            contactForm.reset();
+            document.getElementById('contact-form-title').textContent = "➕ تعريف جهة جديدة (زبون / مجهز)";
+            document.getElementById('btn-contact-submit').textContent = "حفظ وتثبيت الجهة";
+            document.getElementById('btn-contact-cancel').style.display = "none";
+        }
+
+        function deleteContact(id) {
+            if (confirm('هل أنت متأكد من حذف هذه الجهة نهائياً؟ سيتم تصفير كشف الحساب التراكمي في الجدول (الوصولات القديمة لن تُحذف ولكنها ستفقد الربط التراكمي).')) {
+                if (editingContactId === id) cancelEditContact();
+                db.collection('contacts').doc(id).delete()
+                .then(() => {
+                    if (selectedContactFilter === id) selectedContactFilter = null;
+                })
+                .catch(err => alert("خطأ أثناء حذف الجهة: " + err.message));
+            }
+        }
 
         function startRealtimeListeners() {
             unsubscribeContacts = db.collection('contacts')
@@ -477,7 +541,7 @@ const TELEGRAM_MY_CHAT_ID = "636630537";
                 });
         }
 
-        function formatMoney(num) { return Number(num).toLocaleString('ar-EG') + ' د.ع'; }
+        function formatMoney(num) { return Number(num).toLocaleString('en-US') + ' د.ع'; }
 
         function updateUI() {
             let totalInc = 0, totalExp = 0;
@@ -518,7 +582,13 @@ const TELEGRAM_MY_CHAT_ID = "636630537";
                         <td><strong>${c.name}</strong></td>
                         <td><span class="badge ${c.type}">${c.type === 'client' ? 'زبون' : 'مجهز'}</span></td>
                         <td style="color:${balanceColor}; font-weight:700;" dir="ltr">${formatMoney(c.net)}</td>
-                        <td><button style="color:var(--primary); background:none; border:none; cursor:pointer; font-weight:600;" onclick="setContactFilter('${id}')">عرض الوصلات</button></td>
+                        <td>
+                            <div style="display:flex; gap:6px;">
+                                <button style="color:var(--primary); background:none; border:none; cursor:pointer; font-weight:600; font-size:12px;" onclick="setContactFilter('${id}')">الوصولات</button>
+                                <button style="color:#d97706; background:none; border:none; cursor:pointer; font-weight:600; font-size:12px;" onclick="triggerEditContact('${id}')">تعديل</button>
+                                <button style="color:var(--danger); background:none; border:none; cursor:pointer; font-weight:600; font-size:12px;" onclick="deleteContact('${id}')">حذف</button>
+                            </div>
+                        </td>
                     `;
                     ledgerRows.appendChild(tr);
                 });
@@ -555,7 +625,7 @@ const TELEGRAM_MY_CHAT_ID = "636630537";
                             <h4>${tx.contactName || 'جهة غير معرفة'} <span class="badge client">وصل #${tx.receiptNo}</span></h4>
                             <p>${tx.desc}</p>
                         </div>
-                        <div style="font-weight:700; font-size:16px;" class="${tx.type === 'income' ? 'income' : 'expense'}">${tx.type === 'income' ? '+' : '-'} ${Number(tx.amount).toLocaleString('ar-EG')} د.ع</div>
+                        <div style="font-weight:700; font-size:16px;" class="${tx.type === 'income' ? 'income' : 'expense'}">${tx.type === 'income' ? '+' : '-'} ${Number(tx.amount).toLocaleString('en-US')} د.ع</div>
                     </div>
                     <div class="item-meta">
                         <span>${tx.date}</span>
@@ -574,7 +644,6 @@ const TELEGRAM_MY_CHAT_ID = "636630537";
         function clearContactFilter() { selectedContactFilter = null; updateUI(); }
         searchReceipt.addEventListener('input', updateUI);
 
-        // 📊 دالة برمجية لإرسال تفاصيل السند إلى حسابك الخاص مباشرة عبر البوت
         function sendTelegramNotification(tx) {
             if (!TELEGRAM_BOT_TOKEN || TELEGRAM_BOT_TOKEN.includes("ضع_هنا") || !TELEGRAM_MY_CHAT_ID || TELEGRAM_MY_CHAT_ID.includes("ضع_هنا")) {
                 console.log("إعدادات البوت الشخصية غير مكتملة بعد.");
@@ -592,7 +661,7 @@ ${typeText}
 📝 <b>البيان والوصف:</b> ${tx.desc}
 📅 <b>التاريخ والوقت:</b> ${tx.date}
 ${companyName}-------------------------------------
-💰 <b>المبلغ الصافي:</b> <u>${Number(tx.amount).toLocaleString('ar-EG')} دينار عراقي</u>
+💰 <b>المبلغ الصافي:</b> <u>${Number(tx.amount).toLocaleString('en-US')} دينار عراقي</u>
             `.trim();
 
             const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
@@ -601,7 +670,7 @@ ${companyName}-------------------------------------
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    chat_id: TELEGRAM_MY_CHAT_ID, // الإرسال المباشر للخاص
+                    chat_id: TELEGRAM_MY_CHAT_ID, 
                     text: message,
                     parse_mode: "HTML"
                 })
@@ -637,7 +706,7 @@ ${companyName}-------------------------------------
             } else {
                 const receiptNo = Math.floor(100000 + Math.random() * 900000);
                 const now = new Date();
-                const date = now.toLocaleDateString('ar-EG') + ' ' + now.toLocaleTimeString('ar-EG', {hour:'2-digit', minute:'2-digit'});
+                const date = now.toLocaleDateString('en-US') + ' ' + now.toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'});
 
                 const newTxData = {
                     userId: currentUser.uid, type, contactId, contactName, desc, amount: Number(amount), receiptNo, date,
@@ -646,9 +715,7 @@ ${companyName}-------------------------------------
 
                 db.collection('transactions').add(newTxData)
                 .then(() => { 
-                    // استدعاء دالة الإرسال إلى تليجرام للخاص فور النجاح
                     sendTelegramNotification(newTxData);
-
                     txForm.reset(); 
                     document.getElementById('type-income').checked = true; 
                 });
@@ -718,20 +785,20 @@ ${companyName}-------------------------------------
                     <div class="receipt-box">
                         <div style="text-align: center; margin-bottom: 20px;">
                             <h2 style="font-size: 18px; margin: 0;">نظام القبض والصرف السحابي</h2>
-                            ${userHeaderHtml}
+                            \${userHeaderHtml}
                         </div>
                         <div style="border-bottom: 1px dashed #000; margin-bottom: 15px;"></div>
                         <table style="width: 100%; font-size: 14px; line-height: 2;">
-                            <tr><td style="font-weight: bold;">رقم الوصل:</td><td style="color: #2563eb; font-weight:bold;">#${tx.receiptNo}</td></tr>
-                            <tr><td style="font-weight: bold;">طبيعة السند:</td><td>${tx.type === 'income' ? 'قبض مالي (+)' : 'صرف مالي (-)'}</td></tr>
-                            <tr><td style="font-weight: bold;">الجهة/الاسم:</td><td><strong>${tx.contactName}</strong></td></tr>
-                            <tr><td style="font-weight: bold;">البيان:</td><td>${tx.desc}</td></tr>
-                            <tr><td style="font-weight: bold;">التاريخ:</td><td style="font-size:12px;">${tx.date}</td></tr>
+                            <tr><td style="font-weight: bold;">رقم الوصل:</td><td style="color: #2563eb; font-weight:bold;">#\${tx.receiptNo}</td></tr>
+                            <tr><td style="font-weight: bold;">طبيعة السند:</td><td>\${tx.type === 'income' ? 'قبض مالي (+)' : 'صرف مالي (-)'}</td></tr>
+                            <tr><td style="font-weight: bold;">الجهة/الاسم:</td><td><strong>\${tx.contactName}</strong></td></tr>
+                            <tr><td style="font-weight: bold;">البيان:</td><td>\${tx.desc}</td></tr>
+                            <tr><td style="font-weight: bold;">التاريخ:</td><td style="font-size:12px;">\${tx.date}</td></tr>
                         </table>
                         <div style="border-bottom: 1px dashed #000; margin: 15px 0;"></div>
                         <div style="background: #f8fafc; padding: 10px; border-radius: 6px; text-align: center; border:1px solid #e2e8f0;">
                             <span style="font-size: 12px; color: #64748b; display:block;">المبلغ الإجمالي</span>
-                            <strong style="font-size: 20px;">${Number(tx.amount).toLocaleString('ar-EG')} د.ع</strong>
+                            <strong style="font-size: 20px;">\${Number(tx.amount).toLocaleString('en-US')} د.ع</strong>
                         </div>
                     </div>
                 </body>
@@ -739,6 +806,81 @@ ${companyName}-------------------------------------
             `);
             doc.close();
             setTimeout(() => { iframe.contentWindow.focus(); iframe.contentWindow.print(); }, 500);
+        }
+
+        // 💾 وظيفة تصدير النسخة الاحتياطية سحابياً ومحلياً لقفل حسابات سليم
+        function exportBackup() {
+            if (contacts.length === 0 && transactions.length === 0) {
+                alert("لا توجد بيانات مسجلة في حسابك حالياً لتصديرها.");
+                return;
+            }
+            const backupData = {
+                version: "2.0",
+                exportedAt: new Date().toISOString(),
+                contacts: contacts,
+                transactions: transactions
+            };
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", `TSW_Wallet_Backup_${new Date().toLocaleDateString('en-US')}.json`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        }
+
+        // 📥 وظيفة استعادة النسخة الاحتياطية ودمج المعاملات والجهات بدون تكرار
+        function importBackup(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (!data.contacts || !data.transactions) {
+                        alert("الملف المرفوع غير مطابق لهيكلية المحفظة الاحترافية المستهدفة.");
+                        return;
+                    }
+
+                    if (confirm(`تأكيد الاستعادة: هل تريد دمج عدد (${data.contacts.length}) جهات و (${data.transactions.length}) وصولات مضافة إلى حسابك السحابي الحالي؟`)) {
+                        const batch = db.batch();
+                        
+                        data.contacts.forEach(c => {
+                            const cRef = db.collection('contacts').doc(c.id);
+                            batch.set(cRef, {
+                                userId: currentUser.uid,
+                                name: c.name,
+                                type: c.type,
+                                createdAt: c.createdAt ? new firebase.firestore.Timestamp(c.createdAt.seconds, c.createdAt.nanoseconds) : firebase.firestore.FieldValue.serverTimestamp()
+                            }, { merge: true });
+                        });
+
+                        data.transactions.forEach(t => {
+                            const tRef = db.collection('transactions').doc(t.id);
+                            batch.set(tRef, {
+                                userId: currentUser.uid,
+                                type: t.type,
+                                contactId: t.contactId,
+                                contactName: t.contactName,
+                                desc: t.desc,
+                                amount: Number(t.amount),
+                                receiptNo: t.receiptNo,
+                                date: t.date,
+                                createdAt: t.createdAt ? new firebase.firestore.Timestamp(t.createdAt.seconds, t.createdAt.nanoseconds) : firebase.firestore.FieldValue.serverTimestamp()
+                            }, { merge: true });
+                        });
+
+                        batch.commit().then(() => {
+                            alert("تم دمج واستعادة النسخة الاحتياطية بنجاح على قاعدة البيانات السحابية!");
+                            input.value = ''; 
+                        }).catch(err => alert("خطأ مزامنة الدمج السحابي: " + err.message));
+                    }
+                } catch (err) {
+                    alert("خطأ في قراءة ملف JSON، يرجى التأكد من سلامة الملف المرفوع.");
+                }
+            };
+            reader.readAsText(file);
         }
 
         function checkAppInstallation() {
