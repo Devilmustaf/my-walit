@@ -169,7 +169,7 @@
         .badge.supplier { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
 
         .transaction-list { display: flex; flex-direction: column; gap: 12px; }
-        .transaction-item { background: var(--surface-card); padding: 16px; border-radius: 14px; border-right: 5px solid #4b5563; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); display: flex; flex-direction: column; gap: 10px; border: 1px solid var(--border); border-right: 5px solid #4b5563; }
+        .transaction-item { background: var(--surface-card); padding: 16px; border-radius: 14px; border-right: 5px solid #4b5563; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); display: flex; flex-direction: column; gap: 10px; border: 1px solid var(--border); }
         .transaction-item.income { border-right-color: var(--success); background: linear-gradient(90deg, rgba(16, 185, 129, 0.04) 0%, var(--surface-card) 100%); }
         .transaction-item.expense { border-right-color: var(--danger); background: linear-gradient(90deg, rgba(239, 68, 68, 0.04) 0%, var(--surface-card) 100%); }
 
@@ -202,6 +202,7 @@
         </div>
     </div>
 
+    <!-- واجهة تسجيل الدخول -->
     <div class="auth-container" id="auth-box">
         <div class="auth-header">
             <h2 id="auth-title">تسجيل الدخول للمحفظة</h2>
@@ -218,7 +219,7 @@
                 <input type="password" id="auth-password" placeholder="••••••••" minlength="6" required>
             </div>
             
-            <div id="signup-extra-fields" style="display: none; border-top: 1px dashed var(--border); padding-top: 15px; margin-top: 15px;">
+            <div id="signup-extra-fields" style="display: none; border-top: 1px dashed #e2e8f0; padding-top: 15px; margin-top: 15px;">
                 <div class="input-block">
                     <label>اسم الشركة / المذخر التجاري</label>
                     <input type="text" id="auth-company" placeholder="مثال: مذخر دار الدواء">
@@ -242,6 +243,7 @@
         </div>
     </div>
 
+    <!-- واجهة التطبيق الرئيسية -->
     <div class="app-container" id="app-box">
         <header>
             <h1>تطبيق القبض والصرف</h1>
@@ -261,6 +263,7 @@
             <div class="stats-box expense"><span>إجمالي المصاريف (-)</span><p id="total-expense">0 د.ع</p></div>
         </div>
 
+        <!-- قسم تعريف وإضافة الجهات (الزبائن والمجهزين) -->
         <div class="form-section">
             <h3>➕ تعريف جهة جديدة (زبون / مجهز)</h3>
             <form id="contact-form" style="display: flex; flex-direction: column; gap: 10px;">
@@ -275,6 +278,7 @@
             </form>
         </div>
 
+        <!-- نموذج المعاملات المالية المطور بالربط مع الجهات -->
         <div class="form-section">
             <h3 id="form-title">تسجيل عملية ماليّة جديدة</h3>
             <form id="tx-form">
@@ -287,6 +291,8 @@
 
                 <div class="input-block">
                     <label>اختر الحساب / الجهة المعنية</label>
+                    <!-- حقل البحث الذكي المضاف حديثاً تلبيةً لطلبك -->
+                    <input type="text" id="tx-contact-search" placeholder="🔍 اكتب أول أحرف من اسم الحساب للتصفية السريعة..." style="margin-bottom: 8px; padding: 12px; border: 1px solid var(--border); border-radius: 10px; font-size: 14px; outline: none; background: var(--surface-card); color: var(--text); width: 100%;">
                     <select id="tx-contact-id" required>
                         <option value="">-- يرجى اختيار جهة مسجلة من القائمة --</option>
                     </select>
@@ -307,6 +313,7 @@
             </form>
         </div>
 
+        <!-- قسم عرض أرصدة الحسابات التراكمية لكل الجهات -->
         <div class="form-section">
             <h3>📊 كشوفات وأرصدة حسابات الجهات</h3>
             <div class="ledger-table-container">
@@ -326,6 +333,7 @@
             </div>
         </div>
 
+        <!-- سجل الوصولات والتصفية -->
         <div class="history-section">
             <h3>📋 سجل الوصولات والسندات</h3>
             
@@ -382,6 +390,7 @@
         const txList = document.getElementById('tx-list');
         const ledgerRows = document.getElementById('ledger-rows');
         const txContactSelect = document.getElementById('tx-contact-id');
+        const txContactSearch = document.getElementById('tx-contact-search'); // متغير حقل البحث المضاف
         const signupExtraFields = document.getElementById('signup-extra-fields');
         const searchReceipt = document.getElementById('search-receipt');
         const btnTxSubmit = document.getElementById('btn-tx-submit');
@@ -462,21 +471,40 @@
             .catch(err => alert("خطأ في حفظ الجهة: " + err.message));
         });
 
+        // دالة مخصصة لبناء خيارات الحساب المعني بناءً على فلتر البحث الذكي المكتوب
+        function renderSelectOptions(query = '') {
+            const currentSelectedValue = txContactSelect.value;
+            txContactSelect.innerHTML = '<option value="">-- يرجى اختيار جهة مسجلة من القائمة --</option>';
+            
+            contacts.forEach(data => {
+                if (query && !data.name.toLowerCase().includes(query.toLowerCase())) return;
+                
+                const opt = document.createElement('option');
+                opt.value = data.id;
+                opt.textContent = `${data.name} (${data.type === 'client' ? 'زبون' : 'مجهز'})`;
+                txContactSelect.appendChild(opt);
+            });
+            
+            if (currentSelectedValue) {
+                txContactSelect.value = currentSelectedValue;
+            }
+        }
+
+        // مستمع حركي للبحث الذكي بمجرد إدخال الحرف الأول
+        txContactSearch.addEventListener('input', () => {
+            renderSelectOptions(txContactSearch.value);
+        });
+
         function startRealtimeListeners() {
             unsubscribeContacts = db.collection('contacts')
                 .where('userId', '==', currentUser.uid)
                 .onSnapshot(snapshot => {
                     contacts = [];
-                    txContactSelect.innerHTML = '<option value="">-- يرجى اختيار جهة مسجلة من القائمة --</option>';
                     snapshot.forEach(doc => {
                         const data = { id: doc.id, ...doc.data() };
                         contacts.push(data);
-                        
-                        const opt = document.createElement('option');
-                        opt.value = data.id;
-                        opt.textContent = `${data.name} (${data.type === 'client' ? 'زبون' : 'مجهز'})`;
-                        txContactSelect.appendChild(opt);
                     });
+                    renderSelectOptions(txContactSearch.value);
                     updateUI();
                 });
 
@@ -490,7 +518,8 @@
                 });
         }
 
-        function formatMoney(num) { return Number(num).toLocaleString('ar-EG') + ' د.ع'; }
+        // تحويل تنسيق الأرقام لعرضها بالإنجليزية في الواجهة المالية en-US
+        function formatMoney(num) { return Number(num).toLocaleString('en-US') + ' د.ع'; }
 
         function updateUI() {
             let totalInc = 0, totalExp = 0;
@@ -568,7 +597,7 @@
                             <h4>${tx.contactName || 'جهة غير معرفة'} <span class="badge client">وصل #${tx.receiptNo}</span></h4>
                             <p>${tx.desc}</p>
                         </div>
-                        <div style="font-weight:700; font-size:16px;" class="${tx.type === 'income' ? 'income' : 'expense'}">${tx.type === 'income' ? '+' : '-'} ${Number(tx.amount).toLocaleString('ar-EG')} د.ع</div>
+                        <div style="font-weight:700; font-size:16px;" class="${tx.type === 'income' ? 'income' : 'expense'}">${tx.type === 'income' ? '+' : '-'} ${Number(tx.amount).toLocaleString('en-US')} د.ع</div>
                     </div>
                     <div class="item-meta">
                         <span>${tx.date}</span>
@@ -587,7 +616,7 @@
         function clearContactFilter() { selectedContactFilter = null; updateUI(); }
         searchReceipt.addEventListener('input', updateUI);
 
-        // 📊 دالة برمجية لإرسال تفاصيل السند إلى حسابك الخاص مباشرة عبر البوت
+        // 📊 دالة برمجية لإرسال تفاصيل السند إلى حسابك الخاص مباشرة عبر البوت (بالأرقام الإنجليزية)
         function sendTelegramNotification(tx) {
             if (!TELEGRAM_BOT_TOKEN || TELEGRAM_BOT_TOKEN.includes("ضع_هنا") || !TELEGRAM_MY_CHAT_ID || TELEGRAM_MY_CHAT_ID.includes("ضع_هنا")) {
                 console.log("إعدادات البوت الشخصية غير مكتملة بعد.");
@@ -605,7 +634,7 @@ ${typeText}
 📝 <b>البيان والوصف:</b> ${tx.desc}
 📅 <b>التاريخ والوقت:</b> ${tx.date}
 ${companyName}-------------------------------------
-💰 <b>المبلغ الصافي:</b> <u>${Number(tx.amount).toLocaleString('ar-EG')} دينار عراقي</u>
+💰 <b>المبلغ الصافي:</b> <u>${Number(tx.amount).toLocaleString('en-US')} دينار عراقي</u>
             `.trim();
 
             const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
@@ -650,7 +679,8 @@ ${companyName}-------------------------------------
             } else {
                 const receiptNo = Math.floor(100000 + Math.random() * 900000);
                 const now = new Date();
-                const date = now.toLocaleDateString('ar-EG') + ' ' + now.toLocaleTimeString('ar-EG', {hour:'2-digit', minute:'2-digit'});
+                // صياغة أرقام التاريخ والوقت بالإنجليزية en-US في السندات السحابية الجديدة
+                const date = now.toLocaleDateString('en-US') + ' ' + now.toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'});
 
                 const newTxData = {
                     userId: currentUser.uid, type, contactId, contactName, desc, amount: Number(amount), receiptNo, date,
@@ -661,6 +691,8 @@ ${companyName}-------------------------------------
                 .then(() => { 
                     sendTelegramNotification(newTxData);
                     txForm.reset(); 
+                    txContactSearch.value = ''; // تصفير حقل البحث بعد الحفظ والنجاح
+                    renderSelectOptions();
                     document.getElementById('type-income').checked = true; 
                 });
             }
@@ -670,6 +702,10 @@ ${companyName}-------------------------------------
             const tx = transactions.find(t => t.id === id);
             if (!tx) return;
             editingTxId = id;
+            
+            txContactSearch.value = ''; // إعادة تعيين الفلتر لتسهيل الرؤية الشاملة للأسماء عند التعديل
+            renderSelectOptions();
+            
             txContactSelect.value = tx.contactId || '';
             document.getElementById('tx-desc').value = tx.desc;
             document.getElementById('tx-amount').value = tx.amount;
@@ -685,6 +721,8 @@ ${companyName}-------------------------------------
 
         function cancelEditMode() {
             editingTxId = null; txForm.reset();
+            txContactSearch.value = ''; // تصفير حقل البحث الذكي
+            renderSelectOptions();
             document.getElementById('type-income').checked = true;
             formTitle.textContent = "تسجيل عملية ماليّة جديدة";
             btnTxSubmit.textContent = "حفظ السند سحابياً";
@@ -744,7 +782,7 @@ ${companyName}-------------------------------------
                         <div style="border-bottom: 1px dashed #000; margin: 15px 0;"></div>
                         <div style="background: #f8fafc; padding: 10px; border-radius: 6px; text-align: center; border:1px solid #e2e8f0;">
                             <span style="font-size: 12px; color: #64748b; display:block;">المبلغ الإجمالي</span>
-                            <strong style="font-size: 20px; color: #000;">${Number(tx.amount).toLocaleString('ar-EG')} د.ع</strong>
+                            <strong style="font-size: 20px; color: #000;">${Number(tx.amount).toLocaleString('en-US')} د.ع</strong>
                         </div>
                     </div>
                 </body>
