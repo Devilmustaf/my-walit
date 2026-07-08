@@ -173,7 +173,6 @@
         
         .filter-badge-active { background: #fee2e2; color: #ef4444; padding: 4px 10px; border-radius: 20px; font-size: 12px; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; margin-bottom: 10px; }
 
-        /* ستايل شريط التنقل الجديد للتبويبات */
         .nav-tabs { display: flex; gap: 10px; background: #e2e8f0; padding: 6px; border-radius: 12px; margin-top: 5px; }
         .tab-button { flex: 1; padding: 10px; border: none; border-radius: 8px; font-family: 'Cairo', sans-serif; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.2s ease; color: #475569; background: transparent; }
         .tab-button.active { background: var(--surface); color: #1e3a8a; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
@@ -358,7 +357,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
     <script>
-        // 🛑 إعدادات الإرسال المباشر للخاص (بياناتك الأصلية محفوظة بالكامل)
+        // 🛑 إعدادات الإرسال المباشر للخاص
         const TELEGRAM_BOT_TOKEN = "8517548409:AAFIUHaeRYLiiPa0pwlFmABn6sGhnF64D4Y"; 
         const TELEGRAM_MY_CHAT_ID = "636630537";
         const firebaseConfig = {
@@ -525,7 +524,8 @@
                 });
         }
 
-        function formatMoney(num) { return Number(num).toLocaleString('ar-EG') + ' د.ع'; }
+        // تحويل التنسيق من ar-EG إلى en-US لفرض الأرقام الإنجليزية (123)
+        function formatMoney(num) { return Number(num).toLocaleString('en-US') + ' د.ع'; }
 
         function updateUI() {
             let totalInc = 0, totalExp = 0;
@@ -584,7 +584,6 @@
                 filterIndicator.style.display = 'none';
             }
 
-            // منطق التصفية المطور بالرقم والاسم معاً بدون تداخل
             const filtered = transactions.filter(tx => {
                 if (selectedContactFilter && tx.contactId !== selectedContactFilter) return false;
                 if (searchVal && !tx.receiptNo?.toString().includes(searchVal)) return false;
@@ -606,7 +605,7 @@
                             <h4>${tx.contactName || 'جهة غير معرفة'} <span class="badge client">وصل #${tx.receiptNo}</span></h4>
                             <p>${tx.desc}</p>
                         </div>
-                        <div style="font-weight:700; font-size:16px;" class="${tx.type === 'income' ? 'income' : 'expense'}">${tx.type === 'income' ? '+' : '-'} ${Number(tx.amount).toLocaleString('ar-EG')} د.ع</div>
+                        <div style="font-weight:700; font-size:16px;" class="${tx.type === 'income' ? 'income' : 'expense'}">${tx.type === 'income' ? '+' : '-'} ${Number(tx.amount).toLocaleString('en-US')} د.ع</div>
                     </div>
                     <div class="item-meta">
                         <span>${tx.date}</span>
@@ -623,7 +622,7 @@
 
         function setContactFilter(id) { 
             selectedContactFilter = id; 
-            switchView('archive'); // الانتقال تلقائياً للأرشيف عند فلترة جهة محددة
+            switchView('archive'); 
             updateUI(); 
             txList.scrollIntoView({ behavior: 'smooth' }); 
         }
@@ -632,7 +631,6 @@
         searchReceipt.addEventListener('input', updateUI);
         searchByName.addEventListener('input', updateUI);
 
-        // 📊 دالة برمجية لإرسال تفاصيل السند إلى حسابك الخاص مباشرة عبر البوت
         function sendTelegramNotification(tx) {
             if (!TELEGRAM_BOT_TOKEN || TELEGRAM_BOT_TOKEN.includes("ضع_هنا") || !TELEGRAM_MY_CHAT_ID || TELEGRAM_MY_CHAT_ID.includes("ضع_هنا")) {
                 console.log("إعدادات البوت الشخصية غير مكتملة بعد.");
@@ -650,7 +648,7 @@ ${typeText}
 📝 <b>البيان والوصف:</b> ${tx.desc}
 📅 <b>التاريخ والوقت:</b> ${tx.date}
 ${companyName}-------------------------------------
-💰 <b>المبلغ الصافي:</b> <u>${Number(tx.amount).toLocaleString('ar-EG')} دينار عراقي</u>
+💰 <b>المبلغ الصافي:</b> <u>${Number(tx.amount).toLocaleString('en-US')} دينار عراقي</u>
             `.trim();
 
             const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
@@ -668,9 +666,6 @@ ${companyName}-------------------------------------
             .then(data => {
                 if (!data.ok) {
                     console.error("خطأ من تليجرام:", data.description);
-                    if(data.description.includes("bot was blocked")) {
-                        alert("تنبيه: البوت لا يستطيع إرسال التقرير لخاصك. يرجى الدخول للبوت والضغط على Start أولاً!");
-                    }
                 }
             })
             .catch(err => console.error("فشل الاتصال بتليجرام:", err));
@@ -695,7 +690,8 @@ ${companyName}-------------------------------------
             } else {
                 const receiptNo = Math.floor(100000 + Math.random() * 900000);
                 const now = new Date();
-                const date = now.toLocaleDateString('ar-EG') + ' ' + now.toLocaleTimeString('ar-EG', {hour:'2-digit', minute:'2-digit'});
+                // تم تحويل التاريخ إلى تنسيق الأرقام الإنجليزية en-US ليكون متناسقاً
+                const date = now.toLocaleDateString('en-US') + ' ' + now.toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'});
 
                 const newTxData = {
                     userId: currentUser.uid, type, contactId, contactName, desc, amount: Number(amount), receiptNo, date,
@@ -715,7 +711,7 @@ ${companyName}-------------------------------------
             const tx = transactions.find(t => t.id === id);
             if (!tx) return;
             editingTxId = id;
-            switchView('main'); // إعادة التوجيه لصفحة الإدخال لتنفيذ التعديل بسلاسة
+            switchView('main'); 
             txContactSelect.value = tx.contactId || '';
             document.getElementById('tx-desc').value = tx.desc;
             document.getElementById('tx-amount').value = tx.amount;
@@ -788,7 +784,7 @@ ${companyName}-------------------------------------
                         <div style="border-bottom: 1px dashed #000; margin: 15px 0;"></div>
                         <div style="background: #f8fafc; padding: 10px; border-radius: 6px; text-align: center; border:1px solid #e2e8f0;">
                             <span style="font-size: 12px; color: #64748b; display:block;">المبلغ الإجمالي</span>
-                            <strong style="font-size: 20px;">${Number(tx.amount).toLocaleString('ar-EG')} د.ع</strong>
+                            <strong style="font-size: 20px;">${Number(tx.amount).toLocaleString('en-US')} د.ع</strong>
                         </div>
                     </div>
                 </body>
@@ -798,7 +794,6 @@ ${companyName}-------------------------------------
             setTimeout(() => { iframe.contentWindow.focus(); iframe.contentWindow.print(); }, 500);
         }
 
-        // دالة تصدير نسخة احتياطية محلية متكاملة بصيغة JSON لجميع البيانات المسجلة
         function exportLocalBackup() {
             if (transactions.length === 0 && contacts.length === 0) {
                 alert("لا توجد أي سجلات حالية لتصديرها.");
@@ -824,7 +819,6 @@ ${companyName}-------------------------------------
             document.getElementById('import-file-handler').click();
         }
 
-        // دالة استعادة النسخة الاحتياطية سحابياً مع إعادة تخريج المعرفات وربط السندات
         async function executeImportFromJSON(event) {
             const uploadedFile = event.target.files[0];
             if (!uploadedFile) return;
@@ -844,7 +838,6 @@ ${companyName}-------------------------------------
 
                     const contactIdMappingTable = {};
 
-                    // 1. استعادة وانشاء جهات الاتصال أولاً
                     if (backupData.contacts && Array.isArray(backupData.contacts)) {
                         for (const currentContact of backupData.contacts) {
                             const registeredDoc = await db.collection('contacts').add({
@@ -853,12 +846,10 @@ ${companyName}-------------------------------------
                                 type: currentContact.type,
                                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
                             });
-                            // حفظ المعرف الجديد لربط الوصولات به
                             contactIdMappingTable[currentContact.id] = registeredDoc.id;
                         }
                     }
 
-                    // 2. استعادة وانشاء السندات المالية وربطها بالمعرفات الجديدة
                     if (backupData.transactions && Array.isArray(backupData.transactions)) {
                         for (const currentTx of backupData.transactions) {
                             const freshContactId = contactIdMappingTable[currentTx.contactId] || currentTx.contactId || '';
