@@ -4,7 +4,7 @@
     <link rel="manifest" href="manifest.json">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تطبيق القبض والصرف الاحترافي - نظام التبويبات والبحث المطور</title>
+    <title>تطبيق القبض والصرف الاحترافي - نظام التبويبات المطور</title>
     
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="المحفظة">
@@ -173,7 +173,6 @@
         
         .filter-badge-active { background: #fee2e2; color: #ef4444; padding: 4px 10px; border-radius: 20px; font-size: 12px; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; margin-bottom: 10px; }
 
-        /* تنسيقات شريط التبويبات المطور للتنقل بين الصفحات */
         .nav-tabs { display: flex; gap: 8px; background: #e2e8f0; padding: 6px; border-radius: 12px; margin-top: 5px; }
         .tab-button { flex: 1; padding: 10px 5px; border: none; border-radius: 8px; font-family: 'Cairo', sans-serif; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s ease; color: #475569; background: transparent; text-align: center; }
         .tab-button.active { background: var(--surface); color: #1e3a8a; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
@@ -189,6 +188,7 @@
         </div>
     </div>
 
+    <!-- واجهة تسجيل الدخول -->
     <div class="auth-container" id="auth-box">
         <div class="auth-header">
             <h2 id="auth-title">تسجيل الدخول للمحفظة</h2>
@@ -229,6 +229,7 @@
         </div>
     </div>
 
+    <!-- واجهة التطبيق الرئيسية -->
     <div class="app-container" id="app-box">
         <header>
             <h1>تطبيق القبض والصرف</h1>
@@ -238,12 +239,14 @@
             </div>
         </header>
 
+        <!-- شريط التبويبات الثلاثي المطور للتحكم في عرض الصفحات المستقلة -->
         <div class="nav-tabs">
             <button class="tab-button active" id="tab-main" onclick="switchView('main')">الرئيسية والإدخال</button>
             <button class="tab-button" id="tab-ledger" onclick="switchView('ledger')">كشوفات وأرصدة الحسابات</button>
             <button class="tab-button" id="tab-archive" onclick="switchView('archive')">أرشيف الوصولات العام</button>
         </div>
 
+        <!-- الصفحة الأولى: واجهة الإدخال والعمليات وحالة الصندوق الحالي -->
         <div id="view-main-container" style="display: flex; flex-direction: column; gap: 20px;">
             <div class="balance-card">
                 <span>الصندوق الحالي (إجمالي المتبقي)</span>
@@ -255,6 +258,7 @@
                 <div class="stats-box expense"><span>إجمالي المصاريف (-)</span><p id="total-expense">0 د.ع</p></div>
             </div>
 
+            <!-- قسم تعريف وإضافة الجهات (الزبائن والمجهزين) -->
             <div class="form-section">
                 <h3>➕ تعريف جهة جديدة (زبون / مجهز)</h3>
                 <form id="contact-form" style="display: flex; flex-direction: column; gap: 10px;">
@@ -269,6 +273,7 @@
                 </form>
             </div>
 
+            <!-- نموذج المعاملات المالية المطور بالربط مع الجهات -->
             <div class="form-section">
                 <h3 id="form-title">تسجيل عملية ماليّة جديدة</h3>
                 <form id="tx-form">
@@ -300,13 +305,26 @@
                     <button type="button" class="btn-submit" id="btn-tx-cancel" style="background: #64748b; margin-top: 8px; display: none;" onclick="cancelEditMode()">إلغاء التعديل</button>
                 </form>
             </div>
+
+            <!-- قسم أدوات الأمان والنسخ الاحتياطي السريع المحمي -->
+            <div class="form-section" style="background: #f1f5f9; border: 1px solid #cbd5e1;">
+                <h3>💾 إدارة النسخ الاحتياطي المحلي</h3>
+                <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 10px;">يمكنك حفظ نسخة احتياطية مشفرة محلياً لبياناتك والوصول إليها أو نقلها لحساب آخر عند الحاجة.</p>
+                <div style="display: flex; gap: 10px;">
+                    <button type="button" class="btn-submit" style="background: var(--success); font-size:13px; padding: 10px;" onclick="exportLocalBackup()">تصدير نسخة احتياطية (JSON)</button>
+                    <button type="button" class="btn-submit" style="background: #ea580c; font-size:13px; padding: 10px;" onclick="triggerImportSelection()">استعادة نسخة احتياطية</button>
+                </div>
+                <input type="file" id="import-file-handler" accept=".json" style="display: none;" onchange="executeImportFromJSON(event)">
+            </div>
         </div>
 
+        <!-- الصفحة الثانية الجديدة: كشوفات وأرصدة حسابات الجهات مع الفلترة والبحث المستقل -->
         <div id="view-ledger-container" style="display: none; flex-direction: column; gap: 20px;">
             <div class="form-section">
                 <h3>📊 كشوفات وأرصدة حسابات الجهات الحالية</h3>
                 <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 15px;">ابحث عن زبون أو مجهز محدد لمراجعة موقفه المالي التراكمي في الصندوق واستخراج سنداته.</p>
                 
+                <!-- شريط البحث المخصص للجهات والحسابات -->
                 <div class="input-block">
                     <label>🔍 ابحث باسم الجهة / الحساب التجاري</label>
                     <input type="text" id="search-contact-ledger" placeholder="اكتب اسم العميل، المذخر، أو الشركة...">
@@ -330,13 +348,15 @@
             </div>
         </div>
 
+        <!-- الصفحة الثالثة: أرشيف الوصولات والسجلات العام -->
         <div id="view-archive-container" style="display: none; flex-direction: column; gap: 20px;">
-            <div class="form-section">
-                <h3>📋 سجل ومستودع الوصولات العام</h3>
+            <div class="form-section" style="padding: 20px 15px;">
+                <h3>📋 أرشيف السندات والوصولات العام</h3>
                 <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 15px;">ابحث بدقة عبر كتابة رقم الوصل التلقائي أو اسم الشخص/الجهة المعنية بالتسديد.</p>
                 
-                <div id="filter-indicator" style="display:none;"></div>
+                <div id="filter-indicator" style="margin-bottom: 5px;"></div>
 
+                <!-- شريط البحث الثنائي المتطور والمؤمن -->
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                     <div class="input-block" style="margin-bottom: 5px;">
                         <label style="font-size:11px;">🔍 بحث برقم الوصل المستهدف</label>
@@ -358,7 +378,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
     <script>
-        // 🛑 إعدادات الإرسال المباشر للخاص والتكامل السحابي الثابت
+        // 🛑 إعدادات الإرسال المباشر للخاص والتكامل السحابي
         const TELEGRAM_BOT_TOKEN = "8517548409:AAFIUHaeRYLiiPa0pwlFmABn6sGhnF64D4Y"; 
         const TELEGRAM_MY_CHAT_ID = "636630537";
         const firebaseConfig = {
@@ -406,7 +426,7 @@
         const btnGoogleLogin = document.getElementById('btn-google-login');
         const filterIndicator = document.getElementById('filter-indicator');
 
-        // دالة التنقل والتبديل بين الصفحات (التبويبات المستقلة الثلاثة)
+        // دالة التنقل والتبديل الثلاثي المحسّن بين التبويبات الثلاثة المستقلة
         function switchView(viewName) {
             const mainContainer = document.getElementById('view-main-container');
             const ledgerContainer = document.getElementById('view-ledger-container');
@@ -525,7 +545,7 @@
                 });
         }
 
-        // التنسيق الرقمي بالصيغة الإنكليزية القياسية en-US بناءً على طلبك الثابت
+        // الحفاظ المطلق والثابت على تشفير وصياغة التنسيق الرقمي بالإنكليزي en-US للمبالغ
         function formatMoney(num) { return Number(num).toLocaleString('en-US') + ' د.ع'; }
 
         function updateUI() {
@@ -562,7 +582,7 @@
                 Object.keys(contactBalances).forEach(id => {
                     const c = contactBalances[id];
                     
-                    // منطق فلترة كشوفات الجهات بالبحث
+                    // منطق فلترة كشوفات الجهات والزبائن بالبحث
                     if (searchLedgerVal && !c.name.toLowerCase().includes(searchLedgerVal)) {
                         return; 
                     }
@@ -583,7 +603,7 @@
                 });
 
                 if(renderedContactsCount === 0) {
-                    ledgerRows.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--text-muted); padding:10px;">لا توجد جهة مطابقة لاسم البحث الحالي.</td></tr>';
+                    ledgerRows.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--text-muted); padding:10px;">لا توجد جهة مطابقة لاسم البحث الحلي.</td></tr>';
                 }
             }
 
@@ -804,6 +824,66 @@ ${companyName}-------------------------------------
             `);
             doc.close();
             setTimeout(() => { iframe.contentWindow.focus(); iframe.contentWindow.print(); }, 500);
+        }
+
+        function exportLocalBackup() {
+            if (transactions.length === 0 && contacts.length === 0) {
+                alert("لا توجد أي سجلات حالية لتصديرها.");
+                return;
+            }
+            const backupPayload = { transactions: transactions, contacts: contacts, exportedAt: new Date().toISOString() };
+            const blob = new Blob([JSON.stringify(backupPayload, null, 2)], { type: "application/json" });
+            const temporaryAnchor = document.createElement('a');
+            const fileDate = new Date().toISOString().slice(0, 10);
+            temporaryAnchor.href = URL.createObjectURL(blob);
+            temporaryAnchor.download = `محفظة_نسخة_احتياطية_${fileDate}.json`;
+            document.body.appendChild(temporaryAnchor);
+            temporaryAnchor.click();
+            document.body.removeChild(temporaryAnchor);
+            alert("تم تحميل ملف النسخة الاحتياطية بنجاح على جهازك.");
+        }
+
+        function triggerImportSelection() { document.getElementById('import-file-handler').click(); }
+
+        async function executeImportFromJSON(event) {
+            const uploadedFile = event.target.files[0];
+            if (!uploadedFile) return;
+
+            const fileReader = new FileReader();
+            fileReader.onload = async function(e) {
+                try {
+                    const backupData = JSON.parse(e.target.result);
+                    if (!backupData.transactions && !backupData.contacts) {
+                        alert("صيغة ملف النسخة الاحتياطية غير صالحة.");
+                        return;
+                    }
+                    if (!confirm("هل أنت متأكد من استعادة البيانات؟ سيتم إضافة الجهات والوصولات المدرجة بالملف إلى حسابك السحابي الحالي.")) return;
+
+                    const contactIdMappingTable = {};
+                    if (backupData.contacts && Array.isArray(backupData.contacts)) {
+                        for (const currentContact of backupData.contacts) {
+                            const registeredDoc = await db.collection('contacts').add({
+                                userId: currentUser.uid, name: currentContact.name, type: currentContact.type, createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                            });
+                            contactIdMappingTable[currentContact.id] = registeredDoc.id;
+                        }
+                    }
+
+                    if (backupData.transactions && Array.isArray(backupData.transactions)) {
+                        for (const currentTx of backupData.transactions) {
+                            const freshContactId = contactIdMappingTable[currentTx.contactId] || currentTx.contactId || '';
+                            await db.collection('transactions').add({
+                                userId: currentUser.uid, type: currentTx.type, contactId: freshContactId, contactName: currentTx.contactName, desc: currentTx.desc,
+                                amount: Number(currentTx.amount), receiptNo: currentTx.receiptNo || Math.floor(100000 + Math.random() * 900000), date: currentTx.date,
+                                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                            });
+                        }
+                    }
+                    alert("تمت استعادة كافة البيانات السجلات والوصولات بنجاح وتثبيتها سحابياً!");
+                    document.getElementById('import-file-handler').value = ""; 
+                } catch (err) { alert("حدث خطأ تقني في قراءة ملف JSON: " + err.message); }
+            };
+            fileReader.readAsText(uploadedFile);
         }
 
         function checkAppInstallation() {
