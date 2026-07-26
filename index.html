@@ -494,34 +494,29 @@
             }
         }
 
-        // دالة تصفير البرنامج بالكامل وتفريغ الحسابات والوصولات
+        // دالة تصفير المبالغ والوصولات فقط مع الحفاظ على الأسماء والجهات المخزنة
         async function resetAppDatabase() {
             if (!currentUser) return;
-            const confirm1 = confirm("⚠️ تحذير مهم جداً!\n\nهل أنت متأكد من رغبتك في تصفير البرنامج بالكامل؟\nسيتم مسح جميع الجهات المسجلة وجميع وصولات القبض والصرف نهائياً!");
+            const confirm1 = confirm("⚠️ تنبيه!\n\nهل أنت متأكد من رغبتك في تصفير المبالغ فقط؟\nسيتم مسح جميع وصولات القبض والصرف وتصفير الحسابات نهائياً مع الحفاظ الكامل على أسماء ورصيد الجهات المسجلة!");
             if (!confirm1) return;
 
-            const verifyText = prompt("لإتمام عملية التصفير والحذف النهائي، يرجى كتابة كلمة (تصفير) في الصندوق أدناه:");
+            const verifyText = prompt("لإتمام عملية تصفير المبالغ والوصولات، يرجى كتابة كلمة (تصفير) في الصندوق أدناه:");
             if (verifyText !== "تصفير") {
                 alert("تم إلغاء التصفير. الكلمة المدخلة غير مطابقة.");
                 return;
             }
 
             try {
-                // 1. حذف جميع سندات القبض والصرف للمستخدم الحالي
+                // 1. حذف جميع سندات ووصولات القبض والصرف للمستخدم الحالي لتصفير المبالغ
                 const txDocs = await db.collection('transactions').where('userId', '==', currentUser.uid).get();
-                const batch1 = db.batch();
-                txDocs.forEach(doc => batch1.delete(doc.ref));
-                await batch1.commit();
+                const batch = db.batch();
+                txDocs.forEach(doc => batch.delete(doc.ref));
+                await batch.commit();
 
-                // 2. حذف جميع الجهات المسجلة للمستخدم الحالي
-                const contactDocs = await db.collection('contacts').where('userId', '==', currentUser.uid).get();
-                const batch2 = db.batch();
-                contactDocs.forEach(doc => batch2.delete(doc.ref));
-                await batch2.commit();
-
-                alert("✅ تم تصفير كافة بيانات البرنامج والوصولات بنجاح.");
+                // تم الإبقاء على مجموعة الجهات (contacts) كما هي دون حذف للحفاظ على الأسماء
+                alert("✅ تم تصفير جميع المبالغ والوصولات بنجاح، مع الحفاظ على الأسماء والجهات المسجلة.");
             } catch (err) {
-                alert("حدث خطأ أثناء عملية التصفير: " + err.message);
+                alert("حدث خطأ أثناء عملية تصفير المبالغ: " + err.message);
             }
         }
 
