@@ -8,7 +8,7 @@
     
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="المحفظة">
-    <meta name="apple-mobile-web-app-status-bar-style" content="#1e3a8a">
+    <meta name="apple-mobile-web-app-status-bar-style" content="#071527">
     <meta name="mobile-web-app-capable" content="yes">
 
     <link rel="apple-touch-icon" href="https://img.icons8.com/fluent/512/wallet.png">
@@ -16,18 +16,21 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
     
     <style>
         :root {
-            --primary: #2563eb;
-            --primary-hover: #1d4ed8;
-            --success: #16a34a;
-            --danger: #dc2626;
-            --background: #f8fafc;
-            --surface: #ffffff;
-            --text: #0f172a;
-            --text-muted: #64748b;
+            --primary: #f58220;
+            --primary-hover: #d96b0c;
+            --primary-glow: rgba(245, 130, 32, 0.25);
+            --success: #10b981;
+            --danger: #ef4444;
+            --background: #071527;
+            --surface: #0e2238;
+            --surface-card: #0a192c;
+            --border: #1b3554;
+            --text: #ffffff;
+            --text-muted: #94a3b8;
         }
 
         * {
@@ -49,8 +52,8 @@
 
         .install-prompt {
             display: none; 
-            background: #1e3a8a;
-            color: white;
+            background: var(--surface);
+            color: var(--text);
             padding: 14px 15px;
             position: fixed;
             top: 20px; 
@@ -59,17 +62,17 @@
             width: 92%;
             max-width: 420px;
             border-radius: 14px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
             z-index: 99999;
             justify-content: space-between;
             align-items: center;
             font-size: 13px;
             line-height: 1.6;
-            border: 1px solid rgba(255,255,255,0.15);
+            border: 1px solid var(--primary);
         }
 
         .btn-close-prompt {
-            background: rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.1);
             color: white;
             border: none;
             padding: 5px 12px;
@@ -85,8 +88,8 @@
             background: var(--surface);
             border-radius: 16px;
             padding: 30px 25px;
-            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05);
-            border: 1px solid #e2e8f0;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+            border: 1px solid var(--border);
             margin-top: 40px;
         }
 
@@ -95,18 +98,25 @@
             margin-bottom: 25px;
         }
 
-        .auth-header h2 { color: #1e3a8a; font-size: 22px; margin-bottom: 5px; }
+        .auth-header h2 { color: var(--primary); font-size: 22px; margin-bottom: 5px; font-weight: 700; }
+        .auth-header p { color: var(--text-muted); font-size: 13px; }
 
         .btn-google {
-            width: 100%; padding: 12px; background: #ffffff; color: #1e293b;
-            border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px;
+            width: 100%; padding: 12px; background: var(--surface-card); color: var(--text);
+            border: 1px solid var(--border); border-radius: 8px; font-size: 14px;
             font-weight: 600; cursor: pointer; display: flex; align-items: center;
             justify-content: center; gap: 10px; margin-top: 15px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-google:hover {
+            border-color: var(--primary);
+            box-shadow: 0 0 10px var(--primary-glow);
         }
 
         .auth-divider { text-align: center; margin: 20px 0 10px 0; color: var(--text-muted); font-size: 13px; position: relative; }
         .auth-divider span { background: var(--surface); padding: 0 12px; position: relative; z-index: 1; }
-        .auth-divider::before { content: ""; position: absolute; top: 50%; left: 0; right: 0; border-top: 1px solid #e2e8f0; z-index: 0; }
+        .auth-divider::before { content: ""; position: absolute; top: 50%; left: 0; right: 0; border-top: 1px solid var(--border); z-index: 0; }
 
         .app-container {
             width: 100%;
@@ -117,76 +127,90 @@
             margin-top: 20px;
         }
 
-        header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; }
-        header h1 { font-size: 20px; color: #1e3a8a; }
+        header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 12px; }
+        header h1 { font-size: 20px; color: var(--primary); font-weight: 800; }
 
         .user-info { font-size: 12px; color: var(--text-muted); text-align: left; }
         .header-actions { display: flex; gap: 8px; align-items: center; margin-top: 4px; justify-content: flex-end; }
         
         .btn-logout { background: none; border: none; color: var(--danger); font-size: 12px; font-weight: 600; cursor: pointer; text-decoration: underline; }
-        .btn-reset-app { background: #fef2f2; color: #dc2626; border: 1px solid #fca5a5; padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; }
+        .btn-reset-app { background: rgba(239, 68, 68, 0.15); color: #fca5a5; border: 1px solid #ef4444; padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; }
 
-        .balance-card { background: var(--surface); border-radius: 16px; padding: 20px; text-align: center; border: 1px solid #e2e8f0; }
-        .balance-card h2 { font-size: 28px; margin-top: 5px; }
+        .balance-card { background: var(--surface); border-radius: 16px; padding: 20px; text-align: center; border: 1px solid var(--border); box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        .balance-card span { color: var(--text-muted); font-size: 14px; }
+        .balance-card h2 { font-size: 28px; margin-top: 5px; color: var(--primary); font-weight: 800; }
 
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .stats-box { background: var(--surface); padding: 15px; border-radius: 12px; text-align: center; border: 1px solid #e2e8f0; }
-        .stats-box.income span { color: var(--success); }
-        .stats-box.expense span { color: var(--danger); }
+        .stats-box { background: var(--surface); padding: 15px; border-radius: 12px; text-align: center; border: 1px solid var(--border); }
+        .stats-box span { color: var(--text-muted); font-size: 12px; }
+        .stats-box p { font-size: 16px; font-weight: 700; margin-top: 4px; }
+        .stats-box.income p { color: var(--success); }
+        .stats-box.expense p { color: var(--danger); }
 
-        .form-section { background: var(--surface); border-radius: 16px; padding: 20px; border: 1px solid #e2e8f0; }
-        .form-section h3 { font-size: 15px; margin-bottom: 15px; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; color: #1e3a8a; }
+        .form-section { background: var(--surface); border-radius: 16px; padding: 20px; border: 1px solid var(--border); box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        .form-section h3 { font-size: 15px; margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 8px; color: var(--primary); font-weight: 700; }
 
         .radio-group { display: flex; gap: 15px; margin-bottom: 15px; }
-        .radio-label { flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; cursor: pointer; font-size: 14px; }
+        .radio-label { flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 10px; background: var(--surface-card); border: 1px solid var(--border); color: var(--text); border-radius: 8px; cursor: pointer; font-size: 14px; transition: all 0.2s ease; }
         .radio-group input[type="radio"] { display: none; }
         
-        .radio-group input[type="radio"]:checked + .radio-label.inc { background: #f0fdf4; border-color: var(--success); color: var(--success); font-weight: 600; }
-        .radio-group input[type="radio"]:checked + .radio-label.exp { background: #fef2f2; border-color: var(--danger); color: var(--danger); font-weight: 600; }
+        .radio-group input[type="radio"]:checked + .radio-label.inc { background: rgba(16, 185, 129, 0.15); border-color: var(--success); color: #34d399; font-weight: 700; }
+        .radio-group input[type="radio"]:checked + .radio-label.exp { background: rgba(239, 68, 68, 0.15); border-color: var(--danger); color: #f87171; font-weight: 700; }
 
         .input-block { margin-bottom: 15px; }
-        .input-block label { display: block; font-size: 13px; margin-bottom: 5px; font-weight: 600; }
-        .input-block input, .input-block select { width: 100%; padding: 11px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; outline: none; background: #fff; }
-        .input-block input:focus, .input-block select:focus { border-color: var(--primary); }
+        .input-block label { display: block; font-size: 13px; margin-bottom: 5px; font-weight: 600; color: #cbd5e1; }
+        .input-block input, .input-block select { 
+            width: 100%; padding: 11px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; outline: none; background: var(--surface-card); color: var(--text);
+            transition: all 0.2s ease;
+        }
+        .input-block input:focus, .input-block select:focus { 
+            border-color: var(--primary); 
+            box-shadow: 0 0 10px var(--primary-glow);
+        }
 
         .search-contact-input {
             margin-bottom: 6px;
             padding: 9px 12px !important;
             font-size: 13px !important;
-            border: 1px solid #94a3b8 !important;
-            background: #f8fafc !important;
+            border: 1px solid var(--primary) !important;
+            background: var(--surface-card) !important;
+            color: var(--text) !important;
         }
 
-        .btn-submit { width: 100%; padding: 12px; background: #1e293b; color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; }
+        .btn-submit { 
+            width: 100%; padding: 12px; background: var(--primary); color: #071527; border: none; border-radius: 8px; font-size: 15px; font-weight: 800; cursor: pointer; transition: all 0.2s ease;
+        }
+        .btn-submit:hover { background: var(--primary-hover); box-shadow: 0 0 12px var(--primary-glow); }
 
         .ledger-table-container { overflow-x: auto; margin-top: 5px; }
-        .ledger-table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: right; }
-        .ledger-table th, .ledger-table td { padding: 10px; border-bottom: 1px solid #e2e8f0; }
-        .ledger-table th { background: #f1f5f9; color: #1e3a8a; font-weight: 600; }
-        .badge { padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; }
-        .badge.client { background: #e0f2fe; color: #0369a1; }
-        .badge.supplier { background: #fef3c7; color: #b45309; }
+        .ledger-table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: right; color: var(--text); }
+        .ledger-table th, .ledger-table td { padding: 10px; border-bottom: 1px solid var(--border); }
+        .ledger-table th { background: var(--surface-card); color: var(--primary); font-weight: 700; }
+        .badge { padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; }
+        .badge.client { background: rgba(37, 99, 235, 0.2); color: #60a5fa; border: 1px solid rgba(96, 165, 250, 0.3); }
+        .badge.supplier { background: rgba(245, 130, 32, 0.2); color: var(--primary); border: 1px solid rgba(245, 130, 32, 0.3); }
 
         .transaction-list { display: flex; flex-direction: column; gap: 10px; }
-        .transaction-item { background: var(--surface); padding: 15px; border-radius: 12px; border-right: 5px solid #cbd5e1; box-shadow: 0 2px 4px rgba(0,0,0,0.02); display: flex; flex-direction: column; gap: 8px; }
+        .transaction-item { background: var(--surface-card); padding: 15px; border-radius: 12px; border-right: 5px solid var(--border); border-top: 1px solid var(--border); border-left: 1px solid var(--border); border-bottom: 1px solid var(--border); box-shadow: 0 2px 8px rgba(0,0,0,0.2); display: flex; flex-direction: column; gap: 8px; }
         .transaction-item.income { border-right-color: var(--success); }
         .transaction-item.expense { border-right-color: var(--danger); }
 
         .item-main { display: flex; justify-content: space-between; align-items: flex-start; }
-        .item-details h4 { font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
-        .item-meta { display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: var(--text-muted); border-top: 1px solid #f1f5f9; padding-top: 8px; }
+        .item-details h4 { font-size: 15px; font-weight: 700; color: #ffffff; display: flex; align-items: center; gap: 8px; }
+        .item-details p { color: var(--text-muted); font-size: 13px; margin-top: 2px; }
+        .item-meta { display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: var(--text-muted); border-top: 1px solid var(--border); padding-top: 8px; }
         
         .actions { display: flex; gap: 10px; }
         .btn-action { background: none; border: none; cursor: pointer; font-size: 12px; padding: 2px 4px; }
-        .btn-pdf { color: var(--primary); font-weight: 600; }
-        .btn-edit { color: #d97706; font-weight: 600; }
-        .btn-delete { color: var(--danger); }
+        .btn-pdf { color: var(--primary); font-weight: 700; }
+        .btn-edit { color: #fbbf24; font-weight: 700; }
+        .btn-delete { color: var(--danger); font-weight: 700; }
         
-        .filter-badge-active { background: #fee2e2; color: #ef4444; padding: 4px 10px; border-radius: 20px; font-size: 12px; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; margin-bottom: 10px; }
+        .filter-badge-active { background: rgba(239, 68, 68, 0.2); color: #f87171; padding: 4px 10px; border-radius: 20px; font-size: 12px; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; margin-bottom: 10px; border: 1px solid rgba(239, 68, 68, 0.4); }
 
-        .nav-tabs { display: flex; gap: 8px; background: #e2e8f0; padding: 6px; border-radius: 12px; margin-top: 5px; }
-        .tab-button { flex: 1; padding: 10px 5px; border: none; border-radius: 8px; font-family: 'Cairo', sans-serif; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s ease; color: #475569; background: transparent; text-align: center; }
-        .tab-button.active { background: var(--surface); color: #1e3a8a; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        .nav-tabs { display: flex; gap: 8px; background: var(--surface-card); padding: 6px; border-radius: 12px; margin-top: 5px; border: 1px solid var(--border); }
+        .tab-button { flex: 1; padding: 10px 5px; border: none; border-radius: 8px; font-family: 'Cairo', sans-serif; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s ease; color: var(--text-muted); background: transparent; text-align: center; }
+        .tab-button.active { background: var(--surface); color: var(--primary); border: 1px solid var(--primary); box-shadow: 0 2px 10px var(--primary-glow); }
     </style>
 </head>
 <body>
@@ -216,7 +240,7 @@
                 <input type="password" id="auth-password" placeholder="••••••••" minlength="6" required>
             </div>
             
-            <div id="signup-extra-fields" style="display: none; border-top: 1px dashed #e2e8f0; padding-top: 15px; margin-top: 15px;">
+            <div id="signup-extra-fields" style="display: none; border-top: 1px dashed var(--border); padding-top: 15px; margin-top: 15px;">
                 <div class="input-block">
                     <label>اسم الشركة / المذخر التجاري</label>
                     <input type="text" id="auth-company" placeholder="مثال: مذخر دار الدواء">
@@ -227,7 +251,7 @@
                 </div>
             </div>
 
-            <button type="submit" class="btn-submit" id="btn-auth-submit" style="background: var(--primary); margin-top: 10px;">دخول آمن</button>
+            <button type="submit" class="btn-submit" id="btn-auth-submit" style="margin-top: 10px;">دخول آمن</button>
         </form>
 
         <div class="auth-divider"><span>أو الدخول السريع</span></div>
@@ -236,7 +260,7 @@
         </button>
 
         <div class="auth-toggle" style="text-align: center; margin-top: 15px; font-size: 13px;">
-            <p id="auth-toggle-text">ليس لديك حساب؟ <span style="color:var(--primary); cursor:pointer; font-weight:600;" onclick="toggleAuthMode()">إنشاء حساب جديد</span></p>
+            <p id="auth-toggle-text">ليس لديك حساب؟ <span style="color:var(--primary); cursor:pointer; font-weight:700;" onclick="toggleAuthMode()">إنشاء حساب جديد</span></p>
         </div>
     </div>
 
@@ -274,13 +298,13 @@
                 <h3>➕ تعريف جهة جديدة (زبون / مجهز)</h3>
                 <form id="contact-form" style="display: flex; flex-direction: column; gap: 10px;">
                     <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px;">
-                        <input type="text" id="contact-name" placeholder="اسم الشخص أو المذخر..." style="padding:10px; border-radius:8px; border:1px solid #cbd5e1; font-size:14px;" required>
-                        <select id="contact-type" style="padding:10px; border-radius:8px; border:1px solid #cbd5e1; font-size:14px;">
+                        <input type="text" id="contact-name" placeholder="اسم الشخص أو المذخر..." style="padding:10px; border-radius:8px; border:1px solid var(--border); font-size:14px; background:var(--surface-card); color:var(--text);" required>
+                        <select id="contact-type" style="padding:10px; border-radius:8px; border:1px solid var(--border); font-size:14px; background:var(--surface-card); color:var(--text);">
                             <option value="client">زبون</option>
                             <option value="supplier">مجهز</option>
                         </select>
                     </div>
-                    <button type="submit" class="btn-submit" style="background: #0284c7; padding: 8px; font-size: 13px;">حفظ وتثبيت الجهة</button>
+                    <button type="submit" class="btn-submit" style="padding: 10px; font-size: 13px;">حفظ وتثبيت الجهة</button>
                 </form>
             </div>
 
@@ -315,7 +339,7 @@
                     </div>
 
                     <button type="submit" class="btn-submit" id="btn-tx-submit">حفظ السند سحابياً</button>
-                    <button type="button" class="btn-submit" id="btn-tx-cancel" style="background: #64748b; margin-top: 8px; display: none;" onclick="cancelEditMode()">إلغاء التعديل</button>
+                    <button type="button" class="btn-submit" id="btn-tx-cancel" style="background: #475569; color: #fff; margin-top: 8px; display: none;" onclick="cancelEditMode()">إلغاء التعديل</button>
                 </form>
             </div>
         </div>
@@ -377,7 +401,6 @@
 
     <script>
         const TELEGRAM_BOT_TOKEN = "8517548409:AAFIUHaeRYLiiPa0pwlFmABn6sGhnF64D4Y"; 
-        // قائمة مستلمي الإشعارات (يمكنك إضافة آيدي الأشخاص الآخرين هنا يفصل بين كل آيدي فارزة)
         const TELEGRAM_CHAT_IDS = [
             "636630537" 
         ];
@@ -428,7 +451,6 @@
         const btnGoogleLogin = document.getElementById('btn-google-login');
         const filterIndicator = document.getElementById('filter-indicator');
 
-        // دالة تنسيق المبلغ وإضافة الفوارز تلقائياً أثناء الكتابة
         function formatAmountInput(input) {
             let cleanVal = input.value.replace(/[^0-9]/g, '');
             if (cleanVal) {
@@ -494,7 +516,6 @@
             }
         }
 
-        // دالة تصفير المبالغ والوصولات فقط مع الحفاظ على الأسماء والجهات المخزنة
         async function resetAppDatabase() {
             if (!currentUser) return;
             const confirm1 = confirm("⚠️ تنبيه!\n\nهل أنت متأكد من رغبتك في تصفير المبالغ فقط؟\nسيتم مسح جميع وصولات القبض والصرف وتصفير الحسابات نهائياً مع الحفاظ الكامل على أسماء ورصيد الجهات المسجلة!");
@@ -507,13 +528,11 @@
             }
 
             try {
-                // 1. حذف جميع سندات ووصولات القبض والصرف للمستخدم الحالي لتصفير المبالغ
                 const txDocs = await db.collection('transactions').where('userId', '==', currentUser.uid).get();
                 const batch = db.batch();
                 txDocs.forEach(doc => batch.delete(doc.ref));
                 await batch.commit();
 
-                // تم الإبقاء على مجموعة الجهات (contacts) كما هي دون حذف للحفاظ على الأسماء
                 alert("✅ تم تصفير جميع المبالغ والوصولات بنجاح، مع الحفاظ على الأسماء والجهات المسجلة.");
             } catch (err) {
                 alert("حدث خطأ أثناء عملية تصفير المبالغ: " + err.message);
@@ -527,7 +546,7 @@
                     let html = `<strong>${user.email}</strong>`;
                     if (doc.exists) {
                         cachedUserProfile = doc.data();
-                        if(cachedUserProfile.company) html += `<br><span style="color:var(--success);">💼 ${cachedUserProfile.company}</span>`;
+                        if(cachedUserProfile.company) html += `<br><span style="color:var(--primary); font-weight:700;">💼 ${cachedUserProfile.company}</span>`;
                     }
                     document.getElementById('user-email-display').innerHTML = html;
                 }).catch(() => {
@@ -556,7 +575,6 @@
             .catch(err => alert("خطأ في حفظ الجهة: " + err.message));
         });
 
-        // دالة فلترة قائمة الجهات حسب البحث الذكي
         function filterContactDropdown() {
             const query = txContactSearch.value.trim().toLowerCase();
             txContactSelect.innerHTML = '<option value="">-- يرجى اختيار جهة مسجلة من القائمة --</option>';
@@ -640,15 +658,15 @@
 
                     renderedContactsCount++;
                     const tr = document.createElement('tr');
-                    let balanceColor = '#000';
-                    if (c.net > 0) balanceColor = '#16a34a';
-                    else if (c.net < 0) balanceColor = '#dc2626';
+                    let balanceColor = 'var(--text)';
+                    if (c.net > 0) balanceColor = '#34d399';
+                    else if (c.net < 0) balanceColor = '#f87171';
 
                     tr.innerHTML = `
                         <td><strong>${c.name}</strong></td>
                         <td><span class="badge ${c.type}">${c.type === 'client' ? 'زبون' : 'مجهز'}</span></td>
                         <td style="color:${balanceColor}; font-weight:700;" dir="ltr">${formatMoney(c.net)}</td>
-                        <td><button style="color:var(--primary); background:none; border:none; cursor:pointer; font-weight:600;" onclick="setContactFilter('${id}')">عرض الوصولات</button></td>
+                        <td><button style="color:var(--primary); background:none; border:none; cursor:pointer; font-weight:700;" onclick="setContactFilter('${id}')">عرض الوصولات</button></td>
                     `;
                     ledgerRows.appendChild(tr);
                 });
@@ -756,7 +774,6 @@ ${companyName}-------------------------------------
             const contactName = selectedContactObj ? selectedContactObj.name : '';
             const desc = document.getElementById('tx-desc').value;
             
-            // تنظيف حقل المبلغ من الفوارز لاستخراج الرقم المالي الصافي للحفظ
             const rawAmount = document.getElementById('tx-amount').value.replace(/,/g, '');
             const amount = Number(rawAmount);
 
@@ -806,7 +823,6 @@ ${companyName}-------------------------------------
             txContactSelect.value = tx.contactId || '';
             document.getElementById('tx-desc').value = tx.desc;
             
-            // تحويل المبلغ وتنسيقه بالفوارز عند إجراء التعديل
             document.getElementById('tx-amount').value = Number(tx.amount).toLocaleString('en-US');
             document.getElementById(tx.type === 'income' ? 'type-income' : 'type-expense').checked = true;
 
@@ -824,7 +840,7 @@ ${companyName}-------------------------------------
             document.getElementById('type-income').checked = true;
             formTitle.textContent = "تسجيل عملية ماليّة جديدة";
             btnTxSubmit.textContent = "حفظ السند سحابياً";
-            btnTxSubmit.style.background = "#1e293b";
+            btnTxSubmit.style.background = "var(--primary)";
             btnTxCancel.style.display = "none";
         }
 
@@ -845,7 +861,7 @@ ${companyName}-------------------------------------
 
             let userHeaderHtml = '';
             if (cachedUserProfile && cachedUserProfile.company) {
-                userHeaderHtml = `<p style="font-size: 13px; color: #1e3a8a; margin: 4px 0 0 0; font-weight: 600;">الجهة القابضة: ${cachedUserProfile.company}</p>`;
+                userHeaderHtml = `<p style="font-size: 13px; color: #f58220; margin: 4px 0 0 0; font-weight: 700;">الجهة القابضة: ${cachedUserProfile.company}</p>`;
             }
 
             const doc = iframe.contentWindow.document;
@@ -859,27 +875,27 @@ ${companyName}-------------------------------------
                     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
                     <style>
                         body { font-family: 'Cairo', sans-serif; padding: 20px; background: #fff; direction: rtl; }
-                        .receipt-box { max-width: 400px; margin: 0 auto; padding: 20px; border: 1px dashed #000; border-radius: 8px; }
+                        .receipt-box { max-width: 400px; margin: 0 auto; padding: 20px; border: 2px dashed #f58220; border-radius: 8px; }
                     </style>
                 </head>
                 <body>
                     <div class="receipt-box">
                         <div style="text-align: center; margin-bottom: 20px;">
-                            <h2 style="font-size: 18px; margin: 0;">نظام القبض والصرف السحابي</h2>
+                            <h2 style="font-size: 18px; margin: 0; color:#071527;">نظام القبض والصرف السحابي</h2>
                             ${userHeaderHtml}
                         </div>
-                        <div style="border-bottom: 1px dashed #000; margin-bottom: 15px;"></div>
+                        <div style="border-bottom: 1px dashed #ccc; margin-bottom: 15px;"></div>
                         <table style="width: 100%; font-size: 14px; line-height: 2;">
-                            <tr><td style="font-weight: bold;">رقم الوصل:</td><td style="color: #2563eb; font-weight:bold;">#${tx.receiptNo}</td></tr>
+                            <tr><td style="font-weight: bold;">رقم الوصل:</td><td style="color: #f58220; font-weight:bold;">#${tx.receiptNo}</td></tr>
                             <tr><td style="font-weight: bold;">طبيعة السند:</td><td>${tx.type === 'income' ? 'قبض مالي (+)' : 'صرف مالي (-)'}</td></tr>
                             <tr><td style="font-weight: bold;">الجهة/الاسم:</td><td><strong>${tx.contactName}</strong></td></tr>
                             <tr><td style="font-weight: bold;">البيان:</td><td>${tx.desc}</td></tr>
                             <tr><td style="font-weight: bold;">التاريخ:</td><td style="font-size:12px;">${tx.date}</td></tr>
                         </table>
-                        <div style="border-bottom: 1px dashed #000; margin: 15px 0;"></div>
-                        <div style="background: #f8fafc; padding: 10px; border-radius: 6px; text-align: center; border:1px solid #e2e8f0;">
-                            <span style="font-size: 12px; color: #64748b; display:block;">المبلغ الإجمالي</span>
-                            <strong style="font-size: 20px;">${Number(tx.amount).toLocaleString('en-US')} د.ع</strong>
+                        <div style="border-bottom: 1px dashed #ccc; margin: 15px 0;"></div>
+                        <div style="background: #071527; color:#fff; padding: 10px; border-radius: 6px; text-align: center;">
+                            <span style="font-size: 12px; color: #94a3b8; display:block;">المبلغ الإجمالي</span>
+                            <strong style="font-size: 20px; color:#f58220;">${Number(tx.amount).toLocaleString('en-US')} د.ع</strong>
                         </div>
                     </div>
                 </body>
