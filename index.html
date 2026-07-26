@@ -310,7 +310,8 @@
 
                     <div class="input-block">
                         <label>المبلغ الصافي (دينار عراقي)</label>
-                        <input type="number" id="tx-amount" placeholder="مثال: 50000" required>
+                        <!-- حقل المبلغ المطور مع التنسيق التلقائي بالفوارز -->
+                        <input type="text" inputmode="numeric" id="tx-amount" placeholder="مثال: 500,000" oninput="formatAmountInput(this)" required>
                     </div>
 
                     <button type="submit" class="btn-submit" id="btn-tx-submit">حفظ السند سحابياً</button>
@@ -376,7 +377,11 @@
 
     <script>
         const TELEGRAM_BOT_TOKEN = "8517548409:AAFIUHaeRYLiiPa0pwlFmABn6sGhnF64D4Y"; 
-        const TELEGRAM_MY_CHAT_ID = "636630537";
+        // قائمة مستلمي الإشعارات (يمكنك إضافة آيدي الأشخاص الآخرين هنا يفصل بين كل آيدي فارزة)
+        const TELEGRAM_CHAT_IDS = [
+            "636630537" 
+        ];
+
         const firebaseConfig = {
             apiKey: "AIzaSyAkBFEtRQBub11C7rgbKXqoYses2j7e2Bo",
             authDomain: "iraqi-wallet-9b533.firebaseapp.com",
@@ -422,6 +427,16 @@
         const formTitle = document.getElementById('form-title');
         const btnGoogleLogin = document.getElementById('btn-google-login');
         const filterIndicator = document.getElementById('filter-indicator');
+
+        // دالة تنسيق المبلغ وإضافة الفوارز تلقائياً أثناء الكتابة
+        function formatAmountInput(input) {
+            let cleanVal = input.value.replace(/[^0-9]/g, '');
+            if (cleanVal) {
+                input.value = Number(cleanVal).toLocaleString('en-US');
+            } else {
+                input.value = '';
+            }
+        }
 
         function switchView(viewName) {
             const mainContainer = document.getElementById('view-main-container');
@@ -709,7 +724,7 @@
         searchContactLedger.addEventListener('input', updateUI);
 
         function sendTelegramNotification(tx) {
-            if (!TELEGRAM_BOT_TOKEN || TELEGRAM_BOT_TOKEN.includes("ضع_هنا") || !TELEGRAM_MY_CHAT_ID || TELEGRAM_MY_CHAT_ID.includes("ضع_هنا")) return;
+            if (!TELEGRAM_BOT_TOKEN || TELEGRAM_BOT_TOKEN.includes("ضع_هنا")) return;
 
             const typeText = tx.type === 'income' ? '🟢 <b>وصل قبض مالي (+)</b>' : '🔴 <b>وصل صرف مالي (-)</b>';
             const companyName = (cachedUserProfile && cachedUserProfile.company) ? `💼 <b>المصدر:</b> ${cachedUserProfile.company}\n` : '';
@@ -725,11 +740,15 @@ ${companyName}-------------------------------------
 💰 <b>المبلغ الصافي:</b> <u>${Number(tx.amount).toLocaleString('en-US')} دينار عراقي</u>
             `.trim();
 
-            fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ chat_id: TELEGRAM_MY_CHAT_ID, text: message, parse_mode: "HTML" })
-            }).catch(err => console.error("فشل تليجرام:", err));
+            TELEGRAM_CHAT_IDS.forEach(chatId => {
+                if (chatId && !chatId.includes("ضع_هنا")) {
+                    fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ chat_id: chatId, text: message, parse_mode: "HTML" })
+                    }).catch(err => console.error("فشل تليجرام للآيدي " + chatId + ":", err));
+                }
+            });
         }
 
         txForm.addEventListener('submit', (e) => {
@@ -741,16 +760,24 @@ ${companyName}-------------------------------------
             const selectedContactObj = contacts.find(c => c.id === contactId);
             const contactName = selectedContactObj ? selectedContactObj.name : '';
             const desc = document.getElementById('tx-desc').value;
-            const amount = document.getElementById('tx-amount').value;
+            
+            // تنظيف حقل المبلغ من الفوارز لاستخراج الرقم المالي الصافي للحفظ
+            const rawAmount = document.getElementById('tx-amount').value.replace(/,/g, '');
+            const amount = Number(rawAmount);
 
             if (!contactId) {
                 alert("يرجى اختيار جهة مسجلة من القائمة.");
                 return;
             }
 
+            if (!amount || isNaN(amount) || amount <= 0) {
+                alert("يرجى كتابة مبلغ مالي صحيح.");
+                return;
+            }
+
             if (editingTxId) {
                 db.collection('transactions').doc(editingTxId).update({
-                    type, contactId, contactName, desc, amount: Number(amount),
+                    type, contactId, contactName, desc, amount: amount,
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                 }).then(() => cancelEditMode());
             } else {
@@ -759,7 +786,7 @@ ${companyName}-------------------------------------
                 const date = now.toLocaleDateString('en-US') + ' ' + now.toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'});
 
                 const newTxData = {
-                    userId: currentUser.uid, type, contactId, contactName, desc, amount: Number(amount), receiptNo, date,
+                    userId: currentUser.uid, type, contactId, contactName, desc, amount: amount, receiptNo, date,
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 };
 
@@ -783,7 +810,9 @@ ${companyName}-------------------------------------
             filterContactDropdown();
             txContactSelect.value = tx.contactId || '';
             document.getElementById('tx-desc').value = tx.desc;
-            document.getElementById('tx-amount').value = tx.amount;
+            
+            // تحويل المبلغ وتنسيقه بالفوارز عند إجراء التعديل
+            document.getElementById('tx-amount').value = Number(tx.amount).toLocaleString('en-US');
             document.getElementById(tx.type === 'income' ? 'type-income' : 'type-expense').checked = true;
 
             formTitle.innerHTML = `⚙️ تعديل بيانات السند <span style="color:var(--primary)">#${tx.receiptNo}</span>`;
